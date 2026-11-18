@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sales Support – Pick List, Confirm and Bill</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f4;--sf:#fff;--ink:#14272e;--mu:#5b6f77;--ln:#d5dee2;--ac:#0e6b6b;--acs:#d9efee;--ok:#2a7a3b;--oks:#dcf1e0;--on:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a1e;--sf:#16262c;--ink:#e6eef0;--mu:#93a8af;--ln:#294049;--ac:#4cc3c0;--acs:#173a3b;--ok:#7fd08f;--oks:#173a21;--on:#0e1a1e}}
+:root[data-theme="dark"]{--bg:#0e1a1e;--sf:#16262c;--ink:#e6eef0;--mu:#93a8af;--ln:#294049;--ac:#4cc3c0;--acs:#173a3b;--ok:#7fd08f;--oks:#173a21;--on:#0e1a1e}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+button,select,input{font:inherit;color:var(--ink)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px}
+header{background:var(--sf);border-bottom:1px solid var(--ln)}
+header .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
+h1{font-size:19px;margin:0}h2{font-size:17px;margin:0}
+.sub{color:var(--mu);font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.in{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:0 12px;height:42px}
+.btn{height:42px;padding:0 18px;border-radius:8px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-weight:600}
+.btn.p{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.steps{display:flex;gap:8px;margin:16px 0}
+.step{flex:1;display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);cursor:pointer;text-align:left}
+.step b{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:13px;flex:none}
+.step[aria-current=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
+.step[aria-current=true] b{background:var(--ac);color:var(--on)}
+.step.done b{background:var(--ok);color:var(--on)}
+.step:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:640px){.step span{font-size:13px}.step b{display:none}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-size:22px;line-height:1.2}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--ln);background:var(--sf);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:var(--on);font-weight:600}
+.tools{display:grid;gap:8px;margin-bottom:6px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px;overflow:hidden}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--acs);flex-wrap:wrap}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 14px;text-align:left;border-top:1px solid var(--ln)}
+th{font-size:13px;color:var(--mu);font-weight:600;background:var(--sf)}
+.n{text-align:right!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+tfoot td{font-weight:700}
+.empty{padding:36px;text-align:center;color:var(--mu)}
+.panel{padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px}
+.ban{padding:14px 16px;border-radius:12px;background:var(--oks);color:var(--ok);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.chk input{width:22px;height:22px;margin:0;flex:none}
+.warn{background:var(--acs);border-radius:10px;padding:14px;margin-top:12px}
+.bill{padding:18px}
+.bill .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.tot{margin-left:auto;width:min(300px,100%);margin-top:10px}
+.tot div{display:flex;justify-content:space-between;padding:3px 0}
+.tot .g{border-top:2px solid var(--ink);margin-top:4px;padding-top:8px;font-size:18px;font-weight:700}
+.note{font-size:12px;color:var(--mu);margin:18px 0 30px}
+@media print{body *{visibility:hidden}.pr,.pr *{visibility:visible}.pr{position:absolute;left:0;top:0;width:100%;box-shadow:none;break-inside:avoid;margin:0 0 20px;border:0}.pr-all .pr{position:relative}body{background:#fff}}
+</style></head><body>
+<header><div class="wrap">
+ <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
+ <div class="row"><label class="sub" for="load">Loading</label><select id="load" class="in"></select></div>
+</div></header>
+<main class="wrap">
+ <nav class="steps" id="steps" aria-label="Steps"></nav>
+ <div id="view"></div>
+ <p class="note">Sample data. Replace LOADS with confirmed loading records from Module 1. Weights, rates and GST come from the product master in the code.</p>
+</main>
+<script>
+// Product master: name, category, unit, kg/unit, rate per unit (₹), GST %
+const P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0],g2:["Sugar 50 kg","Grocery","bag",50,2250,5],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5],o1:["Sunflower Oil 1 L (carton of 12)","Oil","carton",11,1320,5],o2:["Groundnut Oil 15 L tin","Oil","tin",14,2400,5]};
+const LOADS={
+ "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6]]},
+ "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Annamalai Mart","Thirunagar","r2",22]]}};
+const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pl=(n,u)=>n+" "+u+(n>1?"s":"");
+let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
+const S={load:Object.keys(LOADS)[0],step:1,shop:"All",cat:"All",q:"",ask:false,tick:false};
+const lines=()=>LOADS[S.load].lines.map(([s,a,p,q])=>{const m=P[p],amt=q*m[4];return{shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}});
+const shopsOf=a=>[...new Set(a.map(l=>l.shop))];
+const conf=()=>done[S.load];
+function stepper(){
+ const c=!!conf(),st=[["Pick list",1,false],["Confirm loading",2,false],["Bills",3,!c]];
+ $("steps").innerHTML=st.map(([t,n,lock])=>`<button class="step ${(n===1&&c)||(n===2&&c)?"done":""}" data-n="${n}" ${lock?"disabled":""} aria-current="${S.step===n}"><b>${(n<3&&c)?"✓":n}</b><span>${t}${lock?" (confirm first)":""}</span></button>`).join("");
+}
+function v1(){
+ const a=lines(),shops=shopsOf(a),q=S.q.toLowerCase();
+ const sc=a.filter(l=>S.shop==="All"||l.shop===S.shop);
+ const v=sc.filter(l=>(S.cat==="All"||l.cat===S.cat)&&(!q||(l.shop+" "+l.area+" "+l.name).toLowerCase().includes(q)));
+ const u={};sc.forEach(l=>u[l.unit]=(u[l.unit]||0)+l.qty);
+ const g={};v.forEach(l=>(g[l.shop]=g[l.shop]||[]).push(l));
+ return `<div class="stats"><div class="stat"><b>${new Set(sc.map(l=>l.shop)).size}</b><span class="sub">Shops</span></div><div class="stat"><b>${sc.length}</b><span class="sub">Product lines</span></div><div class="stat"><b>${fmt(sc.reduce((x,l)=>x+l.qty,0))}</b><span class="sub">${Object.entries(u).map(([k,n])=>pl(n,k)).join(", ")}</span></div><div class="stat"><b>${fmt(sc.reduce((x,l)=>x+l.wt,0))} kg</b><span class="sub">Load weight</span></div></div>
+ <div class="tools"><div class="row"><input id="q" class="in" style="flex:1;min-width:180px" type="search" placeholder="Search shop, area or product" value="${S.q}" aria-label="Search"><select id="shop" class="in" aria-label="Shop"><option value="All">All shops (${shops.length})</option>${shops.map(s=>`<option ${s===S.shop?"selected":""}>${s}</option>`).join("")}</select></div>
+ <div class="chips">${["All",...new Set(a.map(l=>l.cat))].map(k=>`<button class="chip" data-c="${k}" aria-pressed="${S.cat===k}">${k}</button>`).join("")}</div></div>`+
+ (v.length?Object.entries(g).map(([s,ls])=>`<section class="card"><div class="ch"><div><h2>${s}</h2><span class="sub">${ls[0].area}</span></div><span class="sub">${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th>Category</th><th class="n">Quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${ls.map(l=>`<tr><td>${l.name}</td><td>${l.cat}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${fmt(l.wt)}</td></tr>`).join("")}</tbody></table></div></section>`).join(""):`<div class="empty">No products match. Clear the search or choose All.</div>`)+
+ `<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+}
+function v2(){
+ const a=lines(),shops=shopsOf(a),tq=a.reduce((x,l)=>x+l.qty,0),tw=a.reduce((x,l)=>x+l.wt,0);
+ const rows=shops.map(s=>{const ls=a.filter(l=>l.shop===s);return`<tr><td>${s}<div class="sub">${ls[0].area}</div></td><td class="n">${ls.length}</td><td class="n">${ls.reduce((x,l)=>x+l.qty,0)}</td><td class="n">${fmt(ls.reduce((x,l)=>x+l.wt,0))}</td></tr>`}).join("");
+ let act;
+ if(conf())act=`<div class="ban"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
+ else act=`<div class="panel"><label class="chk"><input type="checkbox" id="tick" ${S.tick?"checked":""}><span>I have checked that all shops and quantities above are loaded in the vehicle.</span></label>
+ <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${S.tick?"":"disabled"}>Confirm loading</button></div>
+ ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
+ return`<div class="stats"><div class="stat"><b>${shops.length}</b><span class="sub">Shops</span></div><div class="stat"><b>${a.length}</b><span class="sub">Product lines</span></div><div class="stat"><b>${fmt(tq)}</b><span class="sub">Total quantity</span></div><div class="stat"><b>${fmt(tw)} kg</b><span class="sub">Load weight</span></div></div>
+ <section class="card"><div class="ch"><h2>Check before confirming</h2></div><div class="tw"><table><thead><tr><th>Shop</th><th class="n">Lines</th><th class="n">Quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td><td class="n">${a.length}</td><td class="n">${fmt(tq)}</td><td class="n">${fmt(tw)}</td></tr></tfoot></table></div></section>`+act;
+}
+function v3(){
+ const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
+ const bills=shops.map((s,i)=>{const ls=a.filter(l=>l.shop===s),sub=ls.reduce((x,l)=>x+l.amt,0),tax=ls.reduce((x,l)=>x+l.tax,0),tot=Math.round(sub+tax);gt+=tot;
+ return`<section class="card bill" data-b="${i}"><div class="top"><div><h2>${s}</h2><div class="sub">${ls[0].area}</div></div><div class="n"><b>Bill ${no}-${String(i+1).padStart(2,"0")}</b><div class="sub">Date ${LOADS[S.load].date}</div></div></div>
+ <div class="tw"><table><thead><tr><th>Product</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">GST</th><th class="n">Amount</th></tr></thead><tbody>${ls.map(l=>`<tr><td>${l.name}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${rs(l.rate)}</td><td class="n">${l.gst}%</td><td class="n">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
+ <div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div>
+ <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}).join("");
+ return`<div class="stats"><div class="stat"><b>${shops.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div><div class="row" style="justify-content:flex-end"><button class="btn p" data-pr="all">Print all bills</button></div><div id="bills">${bills}</div>`;
+}
+function render(){
+ $("meta").textContent=`${S.load} · ${LOADS[S.load].date} · ${conf()?"Confirmed":"Not confirmed"}`;
+ stepper();$("view").innerHTML=[v1,v2,v3][S.step-1]();
+}
+function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
+$("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
+$("view").onclick=e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+ if(d.go)go(+d.go);else if(d.c){S.cat=d.c;render()}
+ else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
+ else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});try{localStorage.setItem("ss_confirmed",JSON.stringify(done))}catch(x){}S.ask=false;render()}
+ else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.toggle("pr-all",d.pr==="all");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print();setTimeout(()=>bs.forEach(x=>x.classList.remove("pr")),500)}};
+$("view").onchange=e=>{if(e.target.id==="shop"){S.shop=e.target.value;render()}if(e.target.id==="tick"){S.tick=e.target.checked;render()}};
+$("view").oninput=e=>{if(e.target.id==="q"){S.q=e.target.value;const p=e.target.selectionStart;render();const q=$("q");q.focus();q.setSelectionRange(p,p)}};
+$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}">${k} · ${v.date}</option>`).join("");
+$("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,shop:"All",cat:"All",q:"",ask:false,tick:false});render()};
+render();
+</script></body></html>
