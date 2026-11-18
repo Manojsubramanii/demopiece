@@ -71,15 +71,17 @@ tfoot td{font-weight:700}
  <p class="note">Sample data. Replace LOADS with confirmed loading records from Module 1. Weights, rates and GST come from the product master in the code.</p>
 </main>
 <script>
+// Pickup groups: which product categories are picked together
+const GROUPS={"Pickup 1":["Rice","Grocery"],"Pickup 2":["Oil & Tin","Rice Variety 2","Dry Fruits"]};
 // Product master: name, category, unit, kg/unit, rate per unit (₹), GST %
-const P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0],g2:["Sugar 50 kg","Grocery","bag",50,2250,5],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5],o1:["Sunflower Oil 1 L (carton of 12)","Oil","carton",11,1320,5],o2:["Groundnut Oil 15 L tin","Oil","tin",14,2400,5]};
+const P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0],g2:["Sugar 50 kg","Grocery","bag",50,2250,5],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5],o1:["Sunflower Oil 1 L (carton of 12)","Oil & Tin","carton",11,1320,5],o2:["Groundnut Oil 15 L tin","Oil & Tin","tin",14,2400,5],r4:["Seeraga Samba Rice 25 kg","Rice Variety 2","bag",25,1800,5],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5]};
 const LOADS={
- "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6]]},
- "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Annamalai Mart","Thirunagar","r2",22]]}};
+ "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4]]},
+ "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["AR Stores","Anna Nagar","o1",6],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Lakshmi Provisions","KK Nagar","d1",3],["Annamalai Mart","Thirunagar","r2",22]]}};
 const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pl=(n,u)=>n+" "+u+(n>1?"s":"");
 let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
-const S={load:Object.keys(LOADS)[0],step:1,shop:"All",cat:"All",q:"",ask:false,tick:false};
+const S={load:Object.keys(LOADS)[0],step:1,pick:"All",shop:"All",cat:"All",q:"",ask:false,tick:false};
 const lines=()=>LOADS[S.load].lines.map(([s,a,p,q])=>{const m=P[p],amt=q*m[4];return{shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}});
 const shopsOf=a=>[...new Set(a.map(l=>l.shop))];
 const conf=()=>done[S.load];
@@ -87,28 +89,24 @@ function stepper(){
  const c=!!conf(),st=[["Pick list",1,false],["Confirm loading",2,false],["Bills",3,!c]];
  $("steps").innerHTML=st.map(([t,n,lock])=>`<button class="step ${(n===1&&c)||(n===2&&c)?"done":""}" data-n="${n}" ${lock?"disabled":""} aria-current="${S.step===n}"><b>${(n<3&&c)?"✓":n}</b><span>${t}${lock?" (confirm first)":""}</span></button>`).join("");
 }
+function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return Object.values(m)}
+function pg(t){const g=Object.entries(GROUPS),o=t.filter(x=>!g.some(h=>h[1].includes(x.cat)));if(o.length)g.push(["Other",[...new Set(o.map(x=>x.cat))]]);return g}
+function stats(it){const u={};it.forEach(x=>u[x.unit]=(u[x.unit]||0)+x.qty);return`<div class="stats"><div class="stat"><b>${it.length}</b><span class="sub">Products</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.qty,0))}</b><span class="sub">${Object.entries(u).map(([k,n])=>pl(n,k)).join(", ")}</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.wt,0))} kg</b><span class="sub">Load weight</span></div></div>`}
+function cards(gs,it){return gs.map(([n,c])=>{const r=it.filter(x=>c.includes(x.cat));if(!r.length)return"";return`<section class="card"><div class="ch"><div><h2>${n}</h2><span class="sub">${c.join(", ")}</span></div><span class="sub">${r.length} products · ${fmt(r.reduce((a,x)=>a+x.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th>Category</th><th class="n">Total quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${r.map(x=>`<tr><td>${x.name}</td><td>${x.cat}</td><td class="n">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td></tr>`).join("")}</tbody></table></div></section>`}).join("")}
 function v1(){
- const a=lines(),shops=shopsOf(a),q=S.q.toLowerCase();
- const sc=a.filter(l=>S.shop==="All"||l.shop===S.shop);
- const v=sc.filter(l=>(S.cat==="All"||l.cat===S.cat)&&(!q||(l.shop+" "+l.area+" "+l.name).toLowerCase().includes(q)));
- const u={};sc.forEach(l=>u[l.unit]=(u[l.unit]||0)+l.qty);
- const g={};v.forEach(l=>(g[l.shop]=g[l.shop]||[]).push(l));
- return `<div class="stats"><div class="stat"><b>${new Set(sc.map(l=>l.shop)).size}</b><span class="sub">Shops</span></div><div class="stat"><b>${sc.length}</b><span class="sub">Product lines</span></div><div class="stat"><b>${fmt(sc.reduce((x,l)=>x+l.qty,0))}</b><span class="sub">${Object.entries(u).map(([k,n])=>pl(n,k)).join(", ")}</span></div><div class="stat"><b>${fmt(sc.reduce((x,l)=>x+l.wt,0))} kg</b><span class="sub">Load weight</span></div></div>
- <div class="tools"><div class="row"><input id="q" class="in" style="flex:1;min-width:180px" type="search" placeholder="Search shop, area or product" value="${S.q}" aria-label="Search"><select id="shop" class="in" aria-label="Shop"><option value="All">All shops (${shops.length})</option>${shops.map(s=>`<option ${s===S.shop?"selected":""}>${s}</option>`).join("")}</select></div>
- <div class="chips">${["All",...new Set(a.map(l=>l.cat))].map(k=>`<button class="chip" data-c="${k}" aria-pressed="${S.cat===k}">${k}</button>`).join("")}</div></div>`+
- (v.length?Object.entries(g).map(([s,ls])=>`<section class="card"><div class="ch"><div><h2>${s}</h2><span class="sub">${ls[0].area}</span></div><span class="sub">${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th>Category</th><th class="n">Quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${ls.map(l=>`<tr><td>${l.name}</td><td>${l.cat}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${fmt(l.wt)}</td></tr>`).join("")}</tbody></table></div></section>`).join(""):`<div class="empty">No products match. Clear the search or choose All.</div>`)+
- `<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+ const t=totals(),q=S.q.toLowerCase(),gs=pg(t),sel=gs.filter(g=>S.pick==="All"||g[0]===S.pick);
+ const cats=[...new Set(sel.flatMap(g=>g[1]))];if(S.cat!=="All"&&!cats.includes(S.cat))S.cat="All";
+ const it=t.filter(x=>sel.some(g=>g[1].includes(x.cat))&&(S.cat==="All"||x.cat===S.cat)&&(!q||x.name.toLowerCase().includes(q)));
+ const chip=(a,v,txt,cur)=>`<button class="chip" data-${a}="${v}" aria-pressed="${cur===v}">${txt}</button>`;
+ return stats(it)+`<div class="tools"><input id="q" class="in" type="search" placeholder="Search product" value="${S.q}" aria-label="Search product"><div class="chips">${chip("p","All","All pickups",S.pick)+gs.map(g=>chip("p",g[0],g[0],S.pick)).join("")}</div><div class="chips">${chip("c","All","All categories",S.cat)+cats.map(k=>chip("c",k,k,S.cat)).join("")}</div></div>`+(it.length?cards(sel,it):`<div class="empty">No products match. Clear the search or choose All.</div>`)+`<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
 }
 function v2(){
- const a=lines(),shops=shopsOf(a),tq=a.reduce((x,l)=>x+l.qty,0),tw=a.reduce((x,l)=>x+l.wt,0);
- const rows=shops.map(s=>{const ls=a.filter(l=>l.shop===s);return`<tr><td>${s}<div class="sub">${ls[0].area}</div></td><td class="n">${ls.length}</td><td class="n">${ls.reduce((x,l)=>x+l.qty,0)}</td><td class="n">${fmt(ls.reduce((x,l)=>x+l.wt,0))}</td></tr>`}).join("");
- let act;
+ const t=totals(),gs=pg(t);let act;
  if(conf())act=`<div class="ban"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
- else act=`<div class="panel"><label class="chk"><input type="checkbox" id="tick" ${S.tick?"checked":""}><span>I have checked that all shops and quantities above are loaded in the vehicle.</span></label>
+ else act=`<div class="panel"><label class="chk"><input type="checkbox" id="tick" ${S.tick?"checked":""}><span>I have checked that all products and quantities above are loaded in the vehicle.</span></label>
  <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${S.tick?"":"disabled"}>Confirm loading</button></div>
  ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
- return`<div class="stats"><div class="stat"><b>${shops.length}</b><span class="sub">Shops</span></div><div class="stat"><b>${a.length}</b><span class="sub">Product lines</span></div><div class="stat"><b>${fmt(tq)}</b><span class="sub">Total quantity</span></div><div class="stat"><b>${fmt(tw)} kg</b><span class="sub">Load weight</span></div></div>
- <section class="card"><div class="ch"><h2>Check before confirming</h2></div><div class="tw"><table><thead><tr><th>Shop</th><th class="n">Lines</th><th class="n">Quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td><td class="n">${a.length}</td><td class="n">${fmt(tq)}</td><td class="n">${fmt(tw)}</td></tr></tfoot></table></div></section>`+act;
+ return stats(t)+`<h2 style="margin:16px 0 0">Check before confirming</h2>`+cards(gs,t)+act;
 }
 function v3(){
  const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
@@ -126,7 +124,7 @@ function render(){
 function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
 $("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
 $("view").onclick=e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
- if(d.go)go(+d.go);else if(d.c){S.cat=d.c;render()}
+ if(d.go)go(+d.go);else if(d.p){S.pick=d.p;render()}else if(d.c){S.cat=d.c;render()}
  else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
  else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});try{localStorage.setItem("ss_confirmed",JSON.stringify(done))}catch(x){}S.ask=false;render()}
  else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.toggle("pr-all",d.pr==="all");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print();setTimeout(()=>bs.forEach(x=>x.classList.remove("pr")),500)}};
