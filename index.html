@@ -4,88 +4,139 @@
 <title>Sales Support – Pick List, Confirm and Bill</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* ==== FIREBASE SETUP ====
+   To save data in the cloud, paste your Firebase web app config below
+   (Firebase console > Project settings > Your apps > Web app > Config).
+   Leave the YOUR_... placeholders as they are to run without the cloud (data then stays in this browser). */
+window.FIREBASE_CONFIG={apiKey:"AIzaSyA-SZshtep-V-18FpibD0lXikkl9hkllio",authDomain:"student-d6b22.firebaseapp.com",projectId:"student-d6b22",appId:"1:216169741429:web:bfe9958aedcf2960d4cc3c"};
+</script>
 <style>
-:root{color-scheme:light;--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df;--on:#fff}
-
-
+:root{color-scheme:light;--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df;--on:#fff;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
-:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
 button,select,input{font:inherit;color:var(--ink)}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+h1,h2{font-family:Georgia,"Times New Roman",serif;margin:0}
+h1{font-size:19px}h2{font-size:18px}
 .wrap{max-width:960px;margin:0 auto;padding:0 16px}
-header{background:var(--sf);border-bottom:1px solid var(--ln)}
-header .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
-h1{font-size:19px;margin:0}h2{font-size:17px;margin:0}
 .sub{color:var(--mu);font-size:13px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .in{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:0 12px;height:42px}
-.btn{height:42px;padding:0 18px;border-radius:8px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-weight:600}
+.btn{height:48px;padding:0 18px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-weight:600;font-size:16px}
 .btn.p{background:var(--ac);border-color:var(--ac);color:var(--on)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.lnk{background:none;border:0;padding:0;color:var(--ac);text-decoration:underline;cursor:pointer}
+
+/* header */
+header{background:#6b1624}
+header .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
+header h1,header .sub,header .pick label{color:#fff3e4}
+header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
+.pick{display:flex;flex-direction:column;gap:4px}
+.pick label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid #e9c9c0;border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23b0505c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
+
+/* steps */
 .steps{display:flex;gap:8px;margin:16px 0}
-.step{flex:1;display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);cursor:pointer;text-align:left}
-.step b{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:13px;flex:none}
+.step{flex:1;display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);cursor:pointer;text-align:left;font-size:16px;font-weight:600}
+.step b{width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:15px;flex:none}
 .step[aria-current=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
 .step[aria-current=true] b{background:var(--ac);color:var(--on)}
 .step.done b{background:var(--ok);color:var(--on)}
 .step:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:640px){.step span{font-size:13px}.step b{display:none}}
+
+/* pickup tabs */
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:640px){.tabs{grid-template-columns:1fr}}
+.tab{display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px 16px;border:2px solid var(--ln);border-radius:12px;background:var(--sf);cursor:pointer;min-height:92px}
+.tab b{font:700 19px Georgia,"Times New Roman",serif}
+.tab span{font-size:14px;color:var(--mu)}
+.tab em{font-style:normal;font-size:14px;font-weight:600;margin-top:auto;padding-top:6px}
+.tab[aria-selected=true]{border-color:var(--ac);background:var(--acs);box-shadow:inset 0 0 0 1px var(--ac)}
+.tab[aria-selected=true] b{color:var(--ac)}
+
+/* pickup banner + tables */
+.pkb{margin-top:18px;background:var(--ac);color:var(--on);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pkb h2{font-size:24px;color:var(--on)}
+.pkb .pks{font-size:15px;opacity:.92}
+.pkb .sum{font-size:15px;font-weight:600}
+.pkb .btn{height:44px;background:#fff7ea;color:#6b1624;border-color:#e9c9c0}
+.pk .card{margin-top:10px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;margin-top:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--acs);flex-wrap:wrap}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px 14px;text-align:left;border-top:1px solid var(--ln)}
+td{font-size:16px}
+th{font-size:13px;color:var(--mu);font-weight:600;background:var(--sf)}
+.n{text-align:right!important;font-variant-numeric:tabular-nums;white-space:nowrap}
+.qb{font-size:18px;font-weight:700}
+tfoot td{font-weight:700}
+tr.cg td{background:var(--bg);padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+tr.ok td{background:var(--oks)}
+.ik{width:26px;height:26px;cursor:pointer}
+.empty{padding:36px;text-align:center;color:var(--mu)}
+.ph,.pt,.pth{display:none}
+.ct{width:56px}.cq{width:150px}.cw{width:120px}.pth{width:70px}
+@media(max-width:640px){.ct{width:48px}.cq{width:112px}.cw{width:84px}.qb{font-size:16px}}
+
+/* confirm step + messages */
+.panel{padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px}
+.ban{padding:14px 16px;border-radius:12px;background:var(--oks);color:var(--ok);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
+.warn{background:var(--acs);border-radius:10px;padding:14px;margin-top:12px}
+.note{font-size:12px;color:var(--mu);margin:18px 0 30px}
+.lbl{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;max-width:300px}
+.fl select{height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;border:2px solid var(--ln);border-radius:10px;cursor:pointer}
+
+/* bills */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 14px}
 .stat b{display:block;font-size:22px;line-height:1.2}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--ln);background:var(--sf);cursor:pointer}
-.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:var(--on);font-weight:600}
-.tools{display:grid;gap:8px;margin-bottom:6px}
-.card{background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px;overflow:hidden}
-.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--acs);flex-wrap:wrap}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 14px;text-align:left;border-top:1px solid var(--ln)}
-th{font-size:13px;color:var(--mu);font-weight:600;background:var(--sf)}
-.n{text-align:right!important;font-variant-numeric:tabular-nums;white-space:nowrap}
-tfoot td{font-weight:700}
-.empty{padding:36px;text-align:center;color:var(--mu)}
-.panel{padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px}
-.ban{padding:14px 16px;border-radius:12px;background:var(--oks);color:var(--ok);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
-.chk{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
-.chk input{width:22px;height:22px;margin:0;flex:none}
-.warn{background:var(--acs);border-radius:10px;padding:14px;margin-top:12px}
 .bill{padding:18px}
-.bill .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.bill td,.bill th{border:1px solid var(--ln)}
+.bill thead th{background:var(--acs);color:var(--ink)}
+.inv-h{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px solid var(--ac);margin-bottom:12px}
+.inv-h h2{font-size:24px;letter-spacing:.02em}
+.inv-m{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:640px){.inv-m{grid-template-columns:1fr}}
+.inv-m>div{border:1px solid var(--ln);border-radius:8px;padding:10px 12px}
+.inv-f{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}
+.inv-f .wd{flex:1;min-width:200px}
+.inv-f .tot{margin:0}
 .tot{margin-left:auto;width:min(300px,100%);margin-top:10px}
 .tot div{display:flex;justify-content:space-between;padding:3px 0}
 .tot .g{border-top:2px solid var(--ink);margin-top:4px;padding-top:8px;font-size:18px;font-weight:700}
-.sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:6px;margin:12px 0 0}
-.sm div{border:1px solid var(--ln);border-radius:8px;padding:6px 10px}
-.sm b{display:block;font-variant-numeric:tabular-nums}
-.note{font-size:12px;color:var(--mu);margin:18px 0 30px}
-body{font-size:16px}
-.btn{height:48px;font-size:16px;border-radius:10px}.chip{height:42px;font-size:15px;padding:0 16px}
-th,td{padding:12px 14px}td{font-size:16px}
-.card{box-shadow:0 1px 4px rgba(0,0,0,.07);border-radius:14px}.ch h2{font-size:18px}
-.step{padding:12px 14px;font-size:16px;font-weight:600}.step b{width:30px;height:30px;font-size:15px}
-.pick{display:flex;flex-direction:column;gap:4px}.pick label{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
-.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid var(--ac);border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23b0505c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
-.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;max-width:300px}
-.fl select{height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;border:2px solid var(--ln);border-radius:10px;cursor:pointer}
-.help{background:var(--acs);border-radius:12px;padding:12px 16px;margin:0 0 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.help b{background:var(--ac);color:var(--on);border-radius:14px;padding:2px 12px;font-size:14px}
-.bd{display:inline-block;padding:2px 10px;border-radius:12px;background:var(--acs);font-size:13px;font-weight:600}.qb{font-size:18px;font-weight:700}
-.lbl{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
-.inv-h{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px solid var(--ac);margin-bottom:12px}.inv-h h2{font-size:24px;letter-spacing:.02em}
-.inv-m{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}@media(max-width:640px){.inv-m{grid-template-columns:1fr}}.inv-m>div{border:1px solid var(--ln);border-radius:8px;padding:10px 12px}
-.bill td,.bill th{border:1px solid var(--ln)}.bill thead th{background:var(--acs);color:var(--ink)}
-.inv-f{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}.inv-f .wd{flex:1;min-width:200px}.inv-f .tot{margin:0}
-.sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}.sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
-.ph,.pt,.pth{display:none}.ik{width:26px;height:26px;cursor:pointer}tr.ok td{background:var(--oks)}
-@media print{.ph{display:block;font-size:16px;font-weight:700;margin-bottom:8px}.pt,.pth{display:table-cell}.pt{font-size:20px;text-align:center}.noprint{display:none!important}.ch{background:none}}
-header{background:#6b1624;border-bottom:0}header h1,header .sub,header .pick label{color:#fff3e4}header .pick select{border-color:#e9c9c0}header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
-h1,h2{font-family:Georgia,"Times New Roman",serif}
-@media print{body *{visibility:hidden}.pr,.pr *{visibility:visible}.pr{position:absolute;left:0;top:0;width:100%;box-shadow:none;break-inside:avoid;margin:0 0 20px;border:0}.pr-all .pr{position:relative}body{background:#fff}}
+.sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}
+.sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
+
+/* cloud sign-in (only shown when Firebase is set up) */
+#auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:16px}
+#auth[hidden]{display:none}
+#auth form{width:min(380px,100%);display:grid;gap:12px;margin:0}
+#auth .fl{max-width:none}
+#auth .in{height:48px;font-size:16px}
+
+/* printing */
+@media print{
+ body{background:#fff}
+ header,#steps,.note,.noprint,#auth{display:none!important}
+ .card{box-shadow:none;break-inside:avoid;margin-top:10px}
+ .ch{background:none}
+ .pkb{background:none;color:#000;border-radius:0;border-bottom:3px solid #000;padding:0 0 8px;margin-top:0}
+ .pkb h2,.pkb .pks{color:#000}
+ .ph{display:block;font-size:14px;font-weight:700;margin-top:4px}
+ .pt,.pth{display:table-cell}
+ .pt{font-size:20px;text-align:center}
+ body.pb .bill:not(.pr){display:none}
+ .bill{border:0;margin:0 0 20px}
+}
 </style></head><body>
+<div id="auth" hidden><form id="authf" class="panel"><h2>Sales Support</h2><div class="sub">Sign in to use the shared cloud data.</div><label class="fl">Email<input id="em" class="in" type="email" autocomplete="username" required></label><label class="fl">Password<input id="pw" class="in" type="password" autocomplete="current-password" required></label><div id="aerr" class="warn" role="alert" hidden></div><button class="btn p">Sign in</button></form></div>
 <header><div class="wrap">
  <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
  <div class="row" style="align-items:flex-end"><div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div><button class="btn" id="imp">📥 Import Excel</button></div>
@@ -93,67 +144,92 @@ h1,h2{font-family:Georgia,"Times New Roman",serif}
 <main class="wrap">
  <nav class="steps" id="steps" aria-label="Steps"></nav>
  <div id="view"></div>
- <p class="note">Data, confirmations and ticks are saved in this browser (local storage). Use Import Excel to load your own sheet.</p>
+ <p class="note" id="sync"></p>
 </main>
 <script>
-// Pickup groups (from sketch): Pickup 1 = boxes/tins, Pickup 2 = bags. Tiger is not in a pickup, so it shows under "Other".
-const GROUPS={"Pickup 1":["Oil Box","Dry Fruits","Oil Tin"],"Pickup 2":["Rice","Rice 2","Grocery","Linga"]};
+// Three pickups.
+// Pickup 1 = bags of Rice, Rice 2, Grocery and Linga. Pickup 2 = Oil Box, Oil Tin and Dry Fruit boxes.
+// Pickup 3 (Shopwise) = everything else: loose items sold by kg or by piece, Tiger, and anything not listed.
+const PICKUPS=[
+ {n:"Pickup 1",sub:"Rice, Groceries &amp; Linga (bags)",cats:["Rice","Rice 2","Grocery","Linga"]},
+ {n:"Pickup 2",sub:"Oil Box, Oil Tin &amp; Dry Fruit boxes",cats:["Oil Box","Oil Tin","Dry Fruits"]},
+ {n:"Pickup 3 (Shopwise)",sub:"Loose kg / pieces, Tiger and the rest, shop by shop"}
+];
 // Product master: name, category, unit, kg/unit, rate per unit (₹), GST %, pieces/unit
-let P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5,1],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],g2:["Sugar 50 kg","Grocery","bag",50,2250,5,1],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5,25],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],r4:["Seeraga Samba Rice 25 kg","Rice 2","bag",25,1800,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5,20],l1:["Linga Item 25 kg","Linga","bag",25,1700,5,1],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10]};
+let P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5,1],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],g2:["Sugar 50 kg","Grocery","bag",50,2250,5,1],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5,25],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],r4:["Seeraga Samba Rice 25 kg","Rice 2","bag",25,1800,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5,20],l1:["Linga Item 25 kg","Linga","bag",25,1700,5,1],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10],r5:["Rice Loose (per kg)","Rice","kg",1,52,5,1],g4:["Sugar Loose (per kg)","Grocery","kg",1,45,5,1],d3:["Cashew Loose (per kg)","Dry Fruits","kg",1,750,5,1],o3:["Sunflower Oil 1 L pouch","Oil Box","pcs",1,115,5,1]};
 let LOADS={
- "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["AR Stores","Anna Nagar","t1",4],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Sri Murugan Traders","Simmakkal","l1",8],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Lakshmi Provisions","KK Nagar","t1",6],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Annamalai Mart","Thirunagar","l1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4]]},
+ "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["AR Stores","Anna Nagar","t1",4],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Sri Murugan Traders","Simmakkal","l1",8],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Lakshmi Provisions","KK Nagar","t1",6],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Annamalai Mart","Thirunagar","l1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4],["AR Stores","Anna Nagar","r5",50],["Lakshmi Provisions","KK Nagar","g4",30],["Kumar General Stores","Pasumalai","d3",5],["Annamalai Mart","Thirunagar","o3",24]]},
  "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["AR Stores","Anna Nagar","o1",6],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Lakshmi Provisions","KK Nagar","d1",3],["Annamalai Mart","Thirunagar","r2",22]]}};
-// Per-shop quantity block (from sketch, in this order): [label, category, field]
 // Delivery route: areas in the order the vehicle visits them. Edit to match your real route.
 const ROUTE=["Anna Nagar","Simmakkal","KK Nagar","Thirunagar","Pasumalai"];
-// Item order everywhere: all of one category together, in this order
+// Item order on bills: all of one category together, in this order
 const CAT_ORDER=["Rice","Grocery","Dry Fruits","Oil Box","Oil Tin","Linga","Tiger","Rice 2"];
 const cr=c=>{const i=CAT_ORDER.indexOf(c);return i<0?99:i};
 const cmpl=(x,y)=>cr(x.cat)-cr(y.cat)||x.cat.localeCompare(y.cat)||x.name.localeCompare(y.name);
-const SUM=[["Rice bags","Rice","qty"],["Rice kg","Rice","wt"],["Groceries","Grocery","qty"],["Groceries kg","Grocery","wt"],["Dry box","Dry Fruits","qty"],["Dry kg","Dry Fruits","wt"],["Oil box","Oil Box","qty"],["Oil pcs","Oil Box","pcs"],["Oil tin","Oil Tin","qty"],["Linga","Linga","qty"],["Tiger","Tiger","qty"],["Rice 2","Rice 2","qty"]];
 const SAMPLE={P,LOADS};try{const sv=JSON.parse(localStorage.getItem("ss_data")||"null");if(sv&&sv.P&&sv.LOADS&&Object.keys(sv.LOADS).length){P=sv.P;LOADS=sv.LOADS}}catch(e){}
 const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pl=(n,u)=>n+" "+u+(n>1?"s":"");
 let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
-const S={load:Object.keys(LOADS)[0],step:1,ticks:(()=>{try{return JSON.parse(localStorage.getItem("ss_ticks")||"{}")}catch(e){return{}}})(),mode:"pickup",pick:"All",shop:"All",cat:"All",q:"",ask:false,tick:false};
+const S={load:Object.keys(LOADS)[0],step:1,pk:0,ticks:(()=>{try{return JSON.parse(localStorage.getItem("ss_ticks")||"{}")}catch(e){return{}}})(),ask:false};
+// Saving: always on this device; also to Firebase when it is set up (see the Firebase script at the bottom).
+const CLOUD=window.CLOUD={on:false,push(){},say(t){const e=document.getElementById("sync");if(e)e.textContent=t}};
+const ls=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const saveData=()=>{ls("ss_data",{P,LOADS});CLOUD.push("data",{P,LOADS})};
+const saveProgress=()=>{ls("ss_confirmed",done);ls("ss_ticks",S.ticks);CLOUD.push("progress",{confirmed:done,ticks:S.ticks})};
+// Called by the Firebase script when data arrives from the cloud (for example from another phone)
+window.cloudIn=(k,o)=>{
+ if(k==="data"){if(!o||!o.P||!o.LOADS||!Object.keys(o.LOADS).length)return;P=o.P;LOADS=o.LOADS;ls("ss_data",{P,LOADS});if(!LOADS[S.load])S.load=Object.keys(LOADS)[0]}
+ else{done=(o&&o.confirmed)||{};S.ticks=(o&&o.ticks)||{};ls("ss_confirmed",done);ls("ss_ticks",S.ticks)}
+ if(S.step)render()};
+// What this device already has, used once to upload it if the cloud is still empty
+window.cloudLocal=k=>{try{if(k==="data")return JSON.parse(localStorage.getItem("ss_data")||"null");const c=JSON.parse(localStorage.getItem("ss_confirmed")||"{}"),t=JSON.parse(localStorage.getItem("ss_ticks")||"{}");return Object.keys(c).length||Object.keys(t).length?{confirmed:c,ticks:t}:null}catch(e){return null}};
 const lines=()=>LOADS[S.load].lines.map(([s,a,p,q,b],i)=>{const m=P[p],amt=q*m[4];return{i,b,shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],pcs:q*m[6],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}}).sort(cmpl);
 const words=n=>{const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"],t=x=>x<20?a[x]:b[x/10|0]+(x%10?" "+a[x%10]:""),h=x=>x>99?a[x/100|0]+" Hundred"+(x%100?" "+t(x%100):""):t(x);let r="";const c=n/1e7|0,l=n/1e5%100|0,k=n/1e3%100|0,m=n%1e3;if(c)r+=h(c)+" Crore ";if(l)r+=t(l)+" Lakh ";if(k)r+=t(k)+" Thousand ";if(m)r+=h(m);return(r.trim()||"Zero")+" Rupees Only"};
 const rk=(a,s)=>{const i=ROUTE.indexOf(a.find(l=>l.shop===s).area);return i<0?99:i};
 const shopsOf=a=>[...new Set([...a].sort((x,y)=>x.i-y.i).map(l=>l.shop))].sort((x,y)=>rk(a,x)-rk(a,y));
-const smv=ls=>SUM.map(([t,c,k])=>[t,ls.filter(l=>l.cat===c).reduce((a,l)=>a+l[k],0)]);
 const conf=()=>done[S.load];
 function stepper(){
  const c=!!conf(),st=[["Pick list",1,false],["Check & confirm",2,false],["Make bills",3,!c]];
  $("steps").innerHTML=st.map(([t,n,lock])=>`<button class="step ${(n===1&&c)||(n===2&&c)?"done":""}" data-n="${n}" ${lock?"disabled":""} aria-current="${S.step===n}"><b>${(n<3&&c)?"✓":n}</b><span>${t}${lock?" (confirm first)":""}</span></button>`).join("");
 }
 function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return Object.values(m)}
-function pg(t){const g=Object.entries(GROUPS),o=t.filter(x=>!g.some(h=>h[1].includes(x.cat)));if(o.length)g.push(["Other",[...new Set(o.map(x=>x.cat))]]);return g}
-function stats(it){const u={};it.forEach(x=>u[x.unit]=(u[x.unit]||0)+x.qty);return`<div class="stats"><div class="stat"><b>${it.length}</b><span class="sub">Products</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.qty,0))}</b><span class="sub">${Object.entries(u).map(([k,n])=>pl(n,k)).join(", ")}</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.wt,0))} kg</b><span class="sub">Load weight</span></div></div>`}
-function cards(gs,it,tk){return gs.map(([n,c])=>{const r=it.filter(x=>c.includes(x.cat));if(!r.length)return"";return`<section class="card" data-pk="${n}"><div class="ph">${S.load} · ${LOADS[S.load].date} · ${n} · ${c.join(", ")}</div><div class="ch"><div><h2>${n}</h2><span class="sub">${c.join(", ")}</span></div><div class="row"><span class="sub">${r.length} products · ${fmt(r.reduce((a,x)=>a+x.wt,0))} kg</span>${tk?"":`<button class="btn noprint" data-pk="${n}">🖨 Print ${n}</button>`}</div></div><div class="tw"><table><thead><tr>${tk?"<th></th>":""}<th>Product</th><th>Category</th><th class="n">Total quantity</th><th class="n">Weight (kg)</th><th class="pth">Loaded</th></tr></thead><tbody>${r.map(x=>`<tr class="${tk&&S.ticks[S.load+"|"+x.name]?"ok":""}">${tk?`<td><input type="checkbox" class="ik" data-k="${S.load}|${x.name}" ${S.ticks[S.load+"|"+x.name]?"checked":""} aria-label="Loaded ${x.name}"></td>`:""}<td><b>${x.name}</b></td><td><span class="bd">${x.cat}</span></td><td class="n qb">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td><td class="pt">☐</td></tr>`).join("")}</tbody></table></div></section>`}).join("")}
-function routev(){const a=lines(),sh=shopsOf(a),n=sh.length;return`<div class="sub" style="margin-bottom:4px">Load in this order. The last shop on the delivery route is loaded first, so the first shop's goods end up on top.</div>`+[...sh].reverse().map((s,k)=>{const ls=a.filter(l=>l.shop===s);return`<section class="card"><div class="ch"><div class="row"><span class="bd">Load ${k+1}</span><h2>${s}</h2></div><span class="sub">${ls[0].area} · Delivery stop ${n-k} of ${n} · ${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th class="n">Quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${ls.map(l=>`<tr><td><b>${l.name}</b></td><td class="n qb">${pl(l.qty,l.unit)}</td><td class="n">${fmt(l.wt)}</td></tr>`).join("")}</tbody></table></div></section>`}).join("")}
-function shopv(){
- const a=lines(),cols=["Rice kg","Groceries kg","Dry kg","Oil pcs","Tiger"],tt=cols.map(()=>0);
- const rows=shopsOf(a).map(s=>{const m=Object.fromEntries(smv(a.filter(l=>l.shop===s)));return`<tr><td>${s}<div class="sub">${a.find(l=>l.shop===s).area}</div></td>${cols.map((c,i)=>{tt[i]+=m[c];return`<td class="n">${m[c]?fmt(m[c]):"–"}</td>`}).join("")}</tr>`}).join("");
- return`<section class="card"><div class="ch"><div><h2>Shop wise</h2><span class="sub">Rice, Groceries, Dry in kg · Oil in pcs · Tiger in units</span></div></div><div class="tw"><table><thead><tr><th>Shop</th>${cols.map(c=>`<th class="n">${c.replace(" kg"," (kg)").replace(" pcs"," (pcs)")}</th>`).join("")}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${tt.map(v=>`<td class="n">${fmt(v)}</td>`).join("")}</tr></tfoot></table></div></section>`;
-}
+// "Loose" = sold by the kg or by the piece instead of as a bag / box / tin. Loose items always go to Pickup 3.
+const loose=u=>/^(kgs?|pcs?|pieces?|nos?)$/i.test(String(u).trim());
+const inPk=(i,x)=>{const a=!loose(x.unit)&&PICKUPS[0].cats.includes(x.cat),b=!loose(x.unit)&&PICKUPS[1].cats.includes(x.cat);return i===0?a:i===1?b:!a&&!b};
+const kgOf=it=>it.reduce((a,x)=>a+x.wt,0);
+const kProd=x=>S.load+"|"+x.name,kShop=(s,x)=>S.load+"|"+s+"|"+x.name;
+// Pickup 1 and 2: one list of products (totalled over all shops), in the order of the categories above
+const pkItems=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name));
+// Pickup 3: the leftover items, grouped by shop in delivery-route order
+function pkShops(){const a=lines().filter(l=>inPk(2,l));return shopsOf(a).map(s=>{const m={};a.filter(l=>l.shop===s).forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return{shop:s,area:a.find(l=>l.shop===s).area,items:Object.values(m)}})}
+const pkKeys=i=>i<2?pkItems(i).map(kProd):pkShops().flatMap(s=>s.items.map(x=>kShop(s.shop,x)));
+function pkSum(i){if(i<2){const it=pkItems(i);return{n:it.length,u:"product",wt:kgOf(it)}}const sh=pkShops();return{n:sh.length,u:"shop",wt:sh.reduce((a,s)=>a+kgOf(s.items),0)}}
+function ptable(it,tk,key,groups){
+ let cat="",rows="";
+ it.forEach(x=>{
+  if(groups&&x.cat!==cat){cat=x.cat;rows+=`<tr class="cg"><td colspan="9">${cat}</td></tr>`}
+  const k=key(x),on=tk&&S.ticks[k];
+  rows+=`<tr class="${on?"ok":""}">${tk?`<td><input type="checkbox" class="ik" data-k="${k}" ${on?"checked":""} aria-label="Loaded ${x.name}"></td>`:""}<td><b>${x.name}</b></td><td class="n qb">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td><td class="pt">☐</td></tr>`});
+ return`<div class="tw"><table><thead><tr>${tk?'<th class="ct"></th>':""}<th>Product</th><th class="n cq">Quantity</th><th class="n cw">Weight (kg)</th><th class="pth">Loaded</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="${tk?2:1}">Total</td><td></td><td class="n">${fmt(kgOf(it))}</td><td class="pt"></td></tr></tfoot></table></div>`}
+// o.tk = show tick boxes (step 2), o.pr = show the Print button (step 1)
+function pickup(i,o){
+ const p=PICKUPS[i],s=pkSum(i),tk=!!o.tk,ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length;let body;
+ if(i<2){const it=pkItems(i);body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">Nothing in ${p.n} for this loading.</div>`}
+ else{const sh=pkShops();body=sh.length?sh.map(h=>`<section class="card"><div class="ch"><h2>${h.shop}</h2><span class="sub">${h.area} · ${fmt(kgOf(h.items))} kg</span></div>${ptable(h.items,tk,x=>kShop(h.shop,x),false)}</section>`).join(""):`<div class="empty">Nothing in ${p.n} for this loading.</div>`}
+ const sum=`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`;
+ return`<div class="pk"><div class="pkb"><div><h2>${p.n}</h2><div class="pks">${p.sub}</div><div class="ph">${S.load} · ${LOADS[S.load].date}</div></div><div class="row"><span class="sum">${tk?`${nt} of ${ks.length} ticked · `:""}${sum}</span>${o.pr?`<button class="btn noprint" data-print="1">🖨 Print</button>`:""}</div></div>${body}</div>`}
 function v1(){
- const nx=`<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
- const mt=`<div class="chips" style="margin-bottom:12px"><button class="chip" data-m="pickup" aria-pressed="${S.mode==="pickup"}">📦 By pickup</button><button class="chip" data-m="route" aria-pressed="${S.mode==="route"}">🚚 Loading order</button><button class="chip" data-m="shop" aria-pressed="${S.mode==="shop"}">🏪 By shop</button></div>`;
- if(S.mode==="shop")return mt+shopv()+nx;
- if(S.mode==="route")return mt+routev()+nx;
- const t=totals(),q=S.q.toLowerCase(),gs=pg(t),sel=gs.filter(g=>S.pick==="All"||g[0]===S.pick);
- const cats=[...new Set(sel.flatMap(g=>g[1]))];if(S.cat!=="All"&&!cats.includes(S.cat))S.cat="All";
- const it=t.filter(x=>sel.some(g=>g[1].includes(x.cat))&&(S.cat==="All"||x.cat===S.cat)&&(!q||x.name.toLowerCase().includes(q)));
- const chip=(a,v,txt,cur)=>`<button class="chip" data-${a}="${v}" aria-pressed="${cur===v}">${txt}</button>`;
- return mt+stats(it)+`<div class="tools"><input id="q" class="in" type="search" placeholder="🔍 Type a product name to search" value="${S.q}" aria-label="Search product"><div class="lbl">Show pickup</div><div class="chips">${chip("p","All","All pickups",S.pick)+gs.map(g=>chip("p",g[0],g[0],S.pick)).join("")}</div><label class="fl">Category<select id="cat">${["All",...cats].map(k=>`<option value="${k}" ${k===S.cat?"selected":""}>${k==="All"?"All categories":k}</option>`).join("")}</select></label></div>`+(it.length?cards(sel,it):`<div class="empty">No products match. Clear the search or choose All.</div>`)+nx;
+ const tabs=`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i);return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${p.n}</b><span>${p.sub}</span><em>${pl(s.n,s.u)} · ${fmt(s.wt)} kg</em></button>`}).join("")}</div>`;
+ const nx=`<div class="row noprint" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+ return tabs+pickup(S.pk,{pr:1})+nx;
 }
 function v2(){
- const t=totals(),gs=pg(t),nt=t.filter(x=>S.ticks[S.load+"|"+x.name]).length;let act;
+ const ks=PICKUPS.flatMap((_,i)=>pkKeys(i)),nt=ks.filter(k=>S.ticks[k]).length;let act;
  if(conf())act=`<div class="ban"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
- else act=`<div class="panel"><b>${nt} of ${t.length} items ticked</b><div class="sub">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
- <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${nt===t.length?"":"disabled"}>Confirm loading</button></div>
+ else act=`<div class="panel"><b>${nt} of ${ks.length} items ticked</b><div class="sub">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
+ <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${nt===ks.length?"":"disabled"}>Confirm loading</button></div>
  ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
- return stats(t)+`<h2 style="margin:16px 0 0">Check before confirming</h2>`+cards(gs,t,!conf())+act;
+ return`<h2 style="margin:6px 0 0">Check before confirming</h2><div class="sub">Tick each item as it is loaded, pickup by pickup.</div>`+PICKUPS.map((_,i)=>pickup(i,{tk:!conf()})).join("")+act;
 }
 function v3(){
  const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
@@ -163,7 +239,7 @@ function v3(){
  
  <div class="inv-f"><div class="wd"><span class="lbl">Amount in words</span><br><b>${words(tot)}</b><div class="sub" style="margin-top:12px">Goods once sold will not be taken back.</div></div><div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div><span>Round off</span><span>${rs(tot-sub-tax)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div></div><div class="sig"><span>Customer signature</span><span>For Sales Support<br>Authorised signatory</span></div>
  <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}).join("");
- return`<div class="stats"><div class="stat"><b>${shops.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div><div class="row" style="justify-content:flex-end"><button class="btn p" data-pr="all">Print all bills</button></div><div id="bills">${bills}</div>`;
+ return`<div class="stats noprint"><div class="stat"><b>${shops.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div><div class="row noprint" style="justify-content:flex-end"><button class="btn p" data-pr="all">Print all bills</button></div><div id="bills">${bills}</div>`;
 }
 function render(){
  $("meta").textContent=`${S.load} · ${LOADS[S.load].date} · ${conf()?"Confirmed":"Not confirmed"}`;
@@ -194,26 +270,15 @@ function doImport(){
   const dt=g("date")||new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}).replace(/ /g,"-"),ld=g("load")||"LD-"+dt;
   (nl[ld]=nl[ld]||{date:dt,lines:[]}).lines.push([shop,g("area"),key[k],qty,g("bill")])});
  if(!Object.keys(nl).length){IMP.err="No usable rows. Shop, Product and Quantity must be filled in the columns you chose.";render();return}
- P=P2;LOADS=nl;try{localStorage.setItem("ss_data",JSON.stringify({P,LOADS}))}catch(e){}
+ P=P2;LOADS=nl;saveData();
  Object.keys(nl).forEach(k=>{delete done[k];Object.keys(S.ticks).forEach(t=>{if(t.startsWith(k+"|"))delete S.ticks[t]})});
- try{localStorage.setItem("ss_confirmed",JSON.stringify(done));localStorage.setItem("ss_ticks",JSON.stringify(S.ticks))}catch(e){}
- Object.assign(S,{load:Object.keys(LOADS)[0],mode:"pickup",pick:"All",cat:"All",q:""});IMP=null;go(1)}
+ saveProgress();
+ Object.assign(S,{load:Object.keys(LOADS)[0],pk:0});IMP=null;go(1)}
 function catui(){if(!IMP.map.cat)return"";const u=[...new Set(IMP.rows.map(r=>String(r[+IMP.map.cat]??"").trim()).filter(Boolean))];return`<div style="padding:0 16px 12px"><b>Match categories</b><div class="sub">Choose which pickup category each value in your Excel belongs to.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px">${u.map(x=>`<label class="fl">${x}<select class="cm" data-r="${encodeURIComponent(x)}">${APPCATS.map(c=>`<option ${(IMP.cm[x]||guessCat(x))===c?"selected":""}>${c}</option>`).join("")}</select></label>`).join("")}</div></div>`}
-function doImportOld(){
- const m=IMP.map,P2={},nl={},find=n=>Object.keys(P).find(k=>P[k][0].toLowerCase()===n.toLowerCase());
- IMP.rows.forEach(r=>{const g=f=>m[f]===""?"":String(r[+m[f]]??"").trim(),shop=g("shop"),prod=g("prod"),qty=num(g("qty"));if(!shop||!prod||!qty)return;
-  let id=Object.keys(P2).find(k=>P2[k][0].toLowerCase()===prod.toLowerCase());
-  if(!id){const o=P[find(prod)],v=(f,i,d)=>g(f)!==""?(i>2?num(g(f)):g(f)):(o?o[i]:d);id="p"+Object.keys(P2).length;P2[id]=[prod,v("cat",1,"Other"),v("unit",2,"pcs"),v("kg",3,0),v("rate",4,0),v("gst",5,0),v("pcs",6,1)]}
-  const ld=g("load")||"LD-IMPORT";(nl[ld]=nl[ld]||{date:g("date")||new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}).replace(/ /g,"-"),lines:[]}).lines.push([shop,g("area"),id,qty])});
- if(!Object.keys(nl).length){IMP.err="No usable rows. Shop, Product and Quantity must be filled in the columns you chose.";render();return}
- P=P2;LOADS=nl;try{localStorage.setItem("ss_data",JSON.stringify({P,LOADS}))}catch(e){}
- Object.keys(nl).forEach(k=>{delete done[k];Object.keys(S.ticks).forEach(t=>{if(t.startsWith(k+"|"))delete S.ticks[t]})});
- try{localStorage.setItem("ss_confirmed",JSON.stringify(done));localStorage.setItem("ss_ticks",JSON.stringify(S.ticks))}catch(e){}
- Object.assign(S,{load:Object.keys(LOADS)[0],mode:"pickup",pick:"All",cat:"All",q:""});IMP=null;go(1)}
-function clearData(){try{localStorage.removeItem("ss_data")}catch(e){}P=SAMPLE.P;LOADS=SAMPLE.LOADS;Object.assign(S,{load:Object.keys(LOADS)[0]});IMP=null;render()}
+function clearData(){try{localStorage.removeItem("ss_data")}catch(e){}CLOUD.push("data",null);P=SAMPLE.P;LOADS=SAMPLE.LOADS;Object.assign(S,{load:Object.keys(LOADS)[0]});IMP=null;render()}
 function vi(){
  const has=localStorage.getItem("ss_data");
- let h=`<section class="card"><div class="ch"><div><h2>Import from Excel</h2><span class="sub">1. Choose your file · 2. Pick the exact column for each field · 3. Import</span></div></div><div style="padding:16px"><input type="file" id="fl" accept=".xlsx,.xls,.csv" class="in" style="height:auto;padding:10px;width:100%"><div class="sub" style="margin-top:8px">Column names must be in the first row of the first sheet. Data is saved in this browser.</div></div></section>`;
+ let h=`<section class="card"><div class="ch"><div><h2>Import from Excel</h2><span class="sub">1. Choose your file · 2. Pick the exact column for each field · 3. Import</span></div></div><div style="padding:16px"><input type="file" id="fl" accept=".xlsx,.xls,.csv" class="in" style="height:auto;padding:10px;width:100%"><div class="sub" style="margin-top:8px">Column names must be in the first row of the first sheet. Data is saved ${CLOUD.on?"to the cloud and on this device":"in this browser"}.</div></div></section>`;
  if(IMP&&IMP.err)h+=`<div class="warn">${IMP.err}</div>`;
  if(IMP&&IMP.hd){const opt=k=>`<option value="">— not in my file —</option>`+IMP.hd.map((x,i)=>x?`<option value="${i}" ${IMP.map[k]===String(i)?"selected":""}>${x}</option>`:"").join(""),ok=["shop","prod","qty"].every(k=>IMP.map[k]!=="");
   h+=`<section class="card"><div class="ch"><div><h2>Choose columns</h2><span class="sub">${IMP.name} · ${IMP.rows.length} rows · * is required</span></div></div><div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">${FIELDS.map(([k,t])=>`<label class="fl">${t}<select class="mp" data-f="${k}">${opt(k)}</select></label>`).join("")}</div>${catui()}<div class="sub" style="padding:0 16px 12px">Unit, kg per unit and pieces are worked out from the product name (BAG, BOX, TIN, KG, litres) when they are not in your file; an oil tin is assumed to be 14 kg and an oil box 10 pieces. If Amount and Tax are both chosen, rate and GST are worked out from them so bill totals match your sheet.</div><div class="row" style="padding:0 16px 16px"><button class="btn p" id="go-imp" ${ok?"":"disabled"}>Import and save</button>${ok?"":`<span class="sub">Choose the Shop, Product and Quantity columns first.</span>`}</div></section>`}
@@ -223,13 +288,48 @@ function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
 $("imp").onclick=()=>go(0);
 $("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
 $("view").onclick=e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
- if(b.id==="go-imp")doImport();else if(b.id==="clr")clearData();else if(d.go)go(+d.go);else if(d.pk){const el=document.querySelector(`section[data-pk="${d.pk}"]`);if(el){document.body.classList.remove("pr-all");el.classList.add("pr");window.print();setTimeout(()=>el.classList.remove("pr"),500)}}else if(d.m){S.mode=d.m;render()}else if(d.p){S.pick=d.p;render()}else if(d.c){S.cat=d.c;render()}
+ if(b.id==="go-imp")doImport();else if(b.id==="clr")clearData();else if(d.go)go(+d.go);else if(d.t){S.pk=+d.t;render()}else if(d.print)window.print();
  else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
- else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});try{localStorage.setItem("ss_confirmed",JSON.stringify(done))}catch(x){}S.ask=false;render()}
- else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.toggle("pr-all",d.pr==="all");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print();setTimeout(()=>bs.forEach(x=>x.classList.remove("pr")),500)}};
-$("view").onchange=e=>{const t=e.target;if(t.id==="fl"&&t.files[0])readFile(t.files[0]);if(t.classList.contains("mp")){IMP.map[t.dataset.f]=t.value;render()}if(t.classList.contains("cm")){IMP.cm[decodeURIComponent(t.dataset.r)]=t.value}if(t.classList.contains("ik")){S.ticks[t.dataset.k]=t.checked;try{localStorage.setItem("ss_ticks",JSON.stringify(S.ticks))}catch(x){}render()}if(e.target.id==="cat"){S.cat=e.target.value;render()}if(e.target.id==="tick"){S.tick=e.target.checked;render()}};
-$("view").oninput=e=>{if(e.target.id==="q"){S.q=e.target.value;const p=e.target.selectionStart;render();const q=$("q");q.focus();q.setSelectionRange(p,p)}};
+ else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});saveProgress();S.ask=false;render()}
+ else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.add("pb");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print()}};
+$("view").onchange=e=>{const t=e.target;if(t.id==="fl"&&t.files[0])readFile(t.files[0]);if(t.classList.contains("mp")){IMP.map[t.dataset.f]=t.value;render()}if(t.classList.contains("cm")){IMP.cm[decodeURIComponent(t.dataset.r)]=t.value}if(t.classList.contains("ik")){S.ticks[t.dataset.k]=t.checked;saveProgress();render()}};
 function opts(){$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}" ${k===S.load?"selected":""}>${k} · ${v.date} · ${done[k]?"✔ Confirmed":"Not confirmed"}</option>`).join("")}
-$("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,mode:"pickup",shop:"All",cat:"All",q:"",ask:false,tick:false});render()};
-render();
-</script></body></html>
+$("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,pk:0,ask:false});render()};
+CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.");render();
+</script>
+<script>
+// Firebase backend (Firestore + email/password sign-in). Does nothing until FIREBASE_CONFIG at the top of this file is filled in.
+(async()=>{
+ const C=window.FIREBASE_CONFIG||{},CLOUD=window.CLOUD,$=id=>document.getElementById(id);
+ if(!C.apiKey||!C.projectId||/^YOUR_/.test(C.apiKey))return;
+ const B="https://www.gstatic.com/firebasejs/12.4.0/";
+ let App,Auth,FS;
+ try{[App,Auth,FS]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-auth.js"),import(B+"firebase-firestore.js")])}
+ catch(e){console.error(e);CLOUD.say("⚠ Cloud sync could not start (no internet?). Saved on this device only.");return}
+ const app=App.initializeApp(C),auth=Auth.getAuth(app);
+ const db=FS.initializeFirestore(app,{localCache:FS.persistentLocalCache({tabManager:FS.persistentMultipleTabManager()})});
+ const ref=k=>FS.doc(db,"salesSupport",k);
+ const say=(t,out)=>{const e=$("sync");e.textContent=t+" ";if(out){const b=document.createElement("button");b.className="lnk";b.textContent="Sign out";b.onclick=()=>Auth.signOut(auth);e.appendChild(b)}};
+ CLOUD.on=true;
+ // Each document holds one JSON string (Firestore does not allow arrays inside arrays)
+ CLOUD.push=(k,o)=>{const u=auth.currentUser;if(!u)return;
+  (o===null?FS.deleteDoc(ref(k)):FS.setDoc(ref(k),{json:JSON.stringify(o),by:u.email,updatedAt:FS.serverTimestamp()})).catch(e=>say("⚠ Could not save to the cloud: "+e.code,1))};
+ $("authf").onsubmit=async e=>{e.preventDefault();const er=$("aerr");er.hidden=true;
+  try{await Auth.signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value)}
+  catch(x){er.textContent=["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-email"].includes(x.code)?"Wrong email or password.":x.code==="auth/network-request-failed"?"No internet connection.":"Sign-in failed ("+x.code+").";er.hidden=false}};
+ let unsub=[],first={};
+ Auth.onAuthStateChanged(auth,u=>{
+  unsub.forEach(f=>f());unsub=[];
+  $("auth").hidden=!!u;
+  if(!u){say("Signed out. Cloud sync is paused.");return}
+  $("pw").value="";say("☁ Saved to the cloud · "+u.email,1);
+  ["data","progress"].forEach(k=>unsub.push(FS.onSnapshot(ref(k),s=>{
+   if(s.metadata.hasPendingWrites)return;
+   if(s.exists()){try{window.cloudIn(k,JSON.parse(s.data().json))}catch(x){console.error(x)}}
+   else if(!first[k]){const o=window.cloudLocal(k);if(o)CLOUD.push(k,o)}
+   first[k]=1;
+  },e=>say("⚠ Cloud error: "+e.code+". Check the Firestore rules.",1))));
+ });
+})();
+</script>
+</body></html>
