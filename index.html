@@ -58,47 +58,79 @@ tfoot td{font-weight:700}
 .tot{margin-left:auto;width:min(300px,100%);margin-top:10px}
 .tot div{display:flex;justify-content:space-between;padding:3px 0}
 .tot .g{border-top:2px solid var(--ink);margin-top:4px;padding-top:8px;font-size:18px;font-weight:700}
+.sm{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:6px;margin:12px 0 0}
+.sm div{border:1px solid var(--ln);border-radius:8px;padding:6px 10px}
+.sm b{display:block;font-variant-numeric:tabular-nums}
 .note{font-size:12px;color:var(--mu);margin:18px 0 30px}
+body{font-size:16px}
+.btn{height:48px;font-size:16px;border-radius:10px}.chip{height:42px;font-size:15px;padding:0 16px}
+th,td{padding:12px 14px}td{font-size:16px}
+.card{box-shadow:0 1px 4px rgba(0,0,0,.07);border-radius:14px}.ch h2{font-size:18px}
+.step{padding:12px 14px;font-size:16px;font-weight:600}.step b{width:30px;height:30px;font-size:15px}
+.pick{display:flex;flex-direction:column;gap:4px}.pick label{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
+.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid var(--ac);border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%230e9a9a' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;max-width:300px}
+.fl select{height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;border:2px solid var(--ln);border-radius:10px;cursor:pointer}
+.help{background:var(--acs);border-radius:12px;padding:12px 16px;margin:0 0 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.help b{background:var(--ac);color:var(--on);border-radius:14px;padding:2px 12px;font-size:14px}
+.bd{display:inline-block;padding:2px 10px;border-radius:12px;background:var(--acs);font-size:13px;font-weight:600}.qb{font-size:18px;font-weight:700}
+.lbl{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.inv-h{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px solid var(--ac);margin-bottom:12px}.inv-h h2{font-size:24px;letter-spacing:.02em}
+.inv-m{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}@media(max-width:640px){.inv-m{grid-template-columns:1fr}}.inv-m>div{border:1px solid var(--ln);border-radius:8px;padding:10px 12px}
+.bill td,.bill th{border:1px solid var(--ln)}.bill thead th{background:var(--acs);color:var(--ink)}
+.inv-f{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}.inv-f .wd{flex:1;min-width:200px}.inv-f .tot{margin:0}
+.sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}.sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
 @media print{body *{visibility:hidden}.pr,.pr *{visibility:visible}.pr{position:absolute;left:0;top:0;width:100%;box-shadow:none;break-inside:avoid;margin:0 0 20px;border:0}.pr-all .pr{position:relative}body{background:#fff}}
 </style></head><body>
 <header><div class="wrap">
  <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
- <div class="row"><label class="sub" for="load">Loading</label><select id="load" class="in"></select></div>
+ <div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div>
 </div></header>
 <main class="wrap">
  <nav class="steps" id="steps" aria-label="Steps"></nav>
  <div id="view"></div>
- <p class="note">Sample data. Replace LOADS with confirmed loading records from Module 1. Weights, rates and GST come from the product master in the code.</p>
+ <p class="note">Sample data. Replace LOADS with confirmed loading records from Module 1. Weights, rates, pieces and GST come from the product master in the code. Linga and Tiger products are placeholders.</p>
 </main>
 <script>
-// Pickup groups: which product categories are picked together
-const GROUPS={"Pickup 1":["Rice","Grocery"],"Pickup 2":["Oil & Tin","Rice Variety 2","Dry Fruits"]};
-// Product master: name, category, unit, kg/unit, rate per unit (₹), GST %
-const P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0],g2:["Sugar 50 kg","Grocery","bag",50,2250,5],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5],o1:["Sunflower Oil 1 L (carton of 12)","Oil & Tin","carton",11,1320,5],o2:["Groundnut Oil 15 L tin","Oil & Tin","tin",14,2400,5],r4:["Seeraga Samba Rice 25 kg","Rice Variety 2","bag",25,1800,5],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5]};
+// Pickup groups (from sketch): Pickup 1 = boxes/tins, Pickup 2 = bags. Tiger is not in a pickup, so it shows under "Other".
+const GROUPS={"Pickup 1":["Oil Box","Dry Fruits","Oil Tin"],"Pickup 2":["Rice","Rice 2","Grocery","Linga"]};
+// Product master: name, category, unit, kg/unit, rate per unit (₹), GST %, pieces/unit
+const P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5,1],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],g2:["Sugar 50 kg","Grocery","bag",50,2250,5,1],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5,25],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],r4:["Seeraga Samba Rice 25 kg","Rice 2","bag",25,1800,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5,20],l1:["Linga Item 25 kg","Linga","bag",25,1700,5,1],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10]};
 const LOADS={
- "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4]]},
+ "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["AR Stores","Anna Nagar","t1",4],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Sri Murugan Traders","Simmakkal","l1",8],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Lakshmi Provisions","KK Nagar","t1",6],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Annamalai Mart","Thirunagar","l1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4]]},
  "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["AR Stores","Anna Nagar","o1",6],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Lakshmi Provisions","KK Nagar","d1",3],["Annamalai Mart","Thirunagar","r2",22]]}};
+// Per-shop quantity block (from sketch, in this order): [label, category, field]
+const SUM=[["Rice bags","Rice","qty"],["Rice kg","Rice","wt"],["Groceries","Grocery","qty"],["Groceries kg","Grocery","wt"],["Dry box","Dry Fruits","qty"],["Dry kg","Dry Fruits","wt"],["Oil box","Oil Box","qty"],["Oil pcs","Oil Box","pcs"],["Oil tin","Oil Tin","qty"],["Linga","Linga","qty"],["Tiger","Tiger","qty"],["Rice 2","Rice 2","qty"]];
 const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pl=(n,u)=>n+" "+u+(n>1?"s":"");
 let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
-const S={load:Object.keys(LOADS)[0],step:1,pick:"All",shop:"All",cat:"All",q:"",ask:false,tick:false};
-const lines=()=>LOADS[S.load].lines.map(([s,a,p,q])=>{const m=P[p],amt=q*m[4];return{shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}});
+const S={load:Object.keys(LOADS)[0],step:1,mode:"pickup",pick:"All",shop:"All",cat:"All",q:"",ask:false,tick:false};
+const lines=()=>LOADS[S.load].lines.map(([s,a,p,q])=>{const m=P[p],amt=q*m[4];return{shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],pcs:q*m[6],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}});
+const words=n=>{const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"],t=x=>x<20?a[x]:b[x/10|0]+(x%10?" "+a[x%10]:""),h=x=>x>99?a[x/100|0]+" Hundred"+(x%100?" "+t(x%100):""):t(x);let r="";const c=n/1e7|0,l=n/1e5%100|0,k=n/1e3%100|0,m=n%1e3;if(c)r+=h(c)+" Crore ";if(l)r+=t(l)+" Lakh ";if(k)r+=t(k)+" Thousand ";if(m)r+=h(m);return(r.trim()||"Zero")+" Rupees Only"};
 const shopsOf=a=>[...new Set(a.map(l=>l.shop))];
+const smv=ls=>SUM.map(([t,c,k])=>[t,ls.filter(l=>l.cat===c).reduce((a,l)=>a+l[k],0)]);
 const conf=()=>done[S.load];
 function stepper(){
- const c=!!conf(),st=[["Pick list",1,false],["Confirm loading",2,false],["Bills",3,!c]];
+ const c=!!conf(),st=[["Pick list",1,false],["Check & confirm",2,false],["Make bills",3,!c]];
  $("steps").innerHTML=st.map(([t,n,lock])=>`<button class="step ${(n===1&&c)||(n===2&&c)?"done":""}" data-n="${n}" ${lock?"disabled":""} aria-current="${S.step===n}"><b>${(n<3&&c)?"✓":n}</b><span>${t}${lock?" (confirm first)":""}</span></button>`).join("");
 }
 function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return Object.values(m)}
 function pg(t){const g=Object.entries(GROUPS),o=t.filter(x=>!g.some(h=>h[1].includes(x.cat)));if(o.length)g.push(["Other",[...new Set(o.map(x=>x.cat))]]);return g}
 function stats(it){const u={};it.forEach(x=>u[x.unit]=(u[x.unit]||0)+x.qty);return`<div class="stats"><div class="stat"><b>${it.length}</b><span class="sub">Products</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.qty,0))}</b><span class="sub">${Object.entries(u).map(([k,n])=>pl(n,k)).join(", ")}</span></div><div class="stat"><b>${fmt(it.reduce((a,x)=>a+x.wt,0))} kg</b><span class="sub">Load weight</span></div></div>`}
-function cards(gs,it){return gs.map(([n,c])=>{const r=it.filter(x=>c.includes(x.cat));if(!r.length)return"";return`<section class="card"><div class="ch"><div><h2>${n}</h2><span class="sub">${c.join(", ")}</span></div><span class="sub">${r.length} products · ${fmt(r.reduce((a,x)=>a+x.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th>Category</th><th class="n">Total quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${r.map(x=>`<tr><td>${x.name}</td><td>${x.cat}</td><td class="n">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td></tr>`).join("")}</tbody></table></div></section>`}).join("")}
+function cards(gs,it){return gs.map(([n,c])=>{const r=it.filter(x=>c.includes(x.cat));if(!r.length)return"";return`<section class="card"><div class="ch"><div><h2>${n}</h2><span class="sub">${c.join(", ")}</span></div><span class="sub">${r.length} products · ${fmt(r.reduce((a,x)=>a+x.wt,0))} kg</span></div><div class="tw"><table><thead><tr><th>Product</th><th>Category</th><th class="n">Total quantity</th><th class="n">Weight (kg)</th></tr></thead><tbody>${r.map(x=>`<tr><td><b>${x.name}</b></td><td><span class="bd">${x.cat}</span></td><td class="n qb">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td></tr>`).join("")}</tbody></table></div></section>`}).join("")}
+function shopv(){
+ const a=lines(),cols=["Rice kg","Groceries kg","Dry kg","Oil pcs","Tiger"],tt=cols.map(()=>0);
+ const rows=shopsOf(a).map(s=>{const m=Object.fromEntries(smv(a.filter(l=>l.shop===s)));return`<tr><td>${s}<div class="sub">${a.find(l=>l.shop===s).area}</div></td>${cols.map((c,i)=>{tt[i]+=m[c];return`<td class="n">${m[c]?fmt(m[c]):"–"}</td>`}).join("")}</tr>`}).join("");
+ return`<section class="card"><div class="ch"><div><h2>Shop wise</h2><span class="sub">Rice, Groceries, Dry in kg · Oil in pcs · Tiger in units</span></div></div><div class="tw"><table><thead><tr><th>Shop</th>${cols.map(c=>`<th class="n">${c.replace(" kg"," (kg)").replace(" pcs"," (pcs)")}</th>`).join("")}</tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Total</td>${tt.map(v=>`<td class="n">${fmt(v)}</td>`).join("")}</tr></tfoot></table></div></section>`;
+}
 function v1(){
+ const nx=`<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+ const mt=`<div class="chips" style="margin-bottom:12px"><button class="chip" data-m="pickup" aria-pressed="${S.mode==="pickup"}">📦 By pickup</button><button class="chip" data-m="shop" aria-pressed="${S.mode==="shop"}">🏪 By shop</button></div>`;
+ if(S.mode==="shop")return mt+shopv()+nx;
  const t=totals(),q=S.q.toLowerCase(),gs=pg(t),sel=gs.filter(g=>S.pick==="All"||g[0]===S.pick);
  const cats=[...new Set(sel.flatMap(g=>g[1]))];if(S.cat!=="All"&&!cats.includes(S.cat))S.cat="All";
  const it=t.filter(x=>sel.some(g=>g[1].includes(x.cat))&&(S.cat==="All"||x.cat===S.cat)&&(!q||x.name.toLowerCase().includes(q)));
  const chip=(a,v,txt,cur)=>`<button class="chip" data-${a}="${v}" aria-pressed="${cur===v}">${txt}</button>`;
- return stats(it)+`<div class="tools"><input id="q" class="in" type="search" placeholder="Search product" value="${S.q}" aria-label="Search product"><div class="chips">${chip("p","All","All pickups",S.pick)+gs.map(g=>chip("p",g[0],g[0],S.pick)).join("")}</div><div class="chips">${chip("c","All","All categories",S.cat)+cats.map(k=>chip("c",k,k,S.cat)).join("")}</div></div>`+(it.length?cards(sel,it):`<div class="empty">No products match. Clear the search or choose All.</div>`)+`<div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+ return mt+stats(it)+`<div class="tools"><input id="q" class="in" type="search" placeholder="🔍 Type a product name to search" value="${S.q}" aria-label="Search product"><div class="lbl">Show pickup</div><div class="chips">${chip("p","All","All pickups",S.pick)+gs.map(g=>chip("p",g[0],g[0],S.pick)).join("")}</div><label class="fl">Category<select id="cat">${["All",...cats].map(k=>`<option value="${k}" ${k===S.cat?"selected":""}>${k==="All"?"All categories":k}</option>`).join("")}</select></label></div>`+(it.length?cards(sel,it):`<div class="empty">No products match. Clear the search or choose All.</div>`)+nx;
 }
 function v2(){
  const t=totals(),gs=pg(t);let act;
@@ -111,26 +143,27 @@ function v2(){
 function v3(){
  const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
  const bills=shops.map((s,i)=>{const ls=a.filter(l=>l.shop===s),sub=ls.reduce((x,l)=>x+l.amt,0),tax=ls.reduce((x,l)=>x+l.tax,0),tot=Math.round(sub+tax);gt+=tot;
- return`<section class="card bill" data-b="${i}"><div class="top"><div><h2>${s}</h2><div class="sub">${ls[0].area}</div></div><div class="n"><b>Bill ${no}-${String(i+1).padStart(2,"0")}</b><div class="sub">Date ${LOADS[S.load].date}</div></div></div>
- <div class="tw"><table><thead><tr><th>Product</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">GST</th><th class="n">Amount</th></tr></thead><tbody>${ls.map(l=>`<tr><td>${l.name}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${rs(l.rate)}</td><td class="n">${l.gst}%</td><td class="n">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
- <div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div>
+ return`<section class="card bill" data-b="${i}"><div class="inv-h"><div><h2>Sales Support</h2><div class="sub">Tax Invoice</div></div><div class="n"><b>Invoice No: ${no}-${String(i+1).padStart(2,"0")}</b><div class="sub">Date: ${LOADS[S.load].date}</div><div class="sub">Loading: ${S.load}</div></div></div><div class="inv-m"><div><span class="lbl">Bill to</span><br><b>${s}</b><div class="sub">${ls[0].area}</div></div><div><span class="lbl">Details</span><div class="sub">Items: ${ls.length}</div><div class="sub">Total weight: ${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</div></div></div>
+ <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th class="n">Qty</th><th class="n">Rate (₹)</th><th class="n">GST</th><th class="n">Amount (₹)</th></tr></thead><tbody>${ls.map((l,j)=>`<tr><td>${j+1}</td><td>${l.name}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${rs(l.rate)}</td><td class="n">${l.gst}%</td><td class="n">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
+ 
+ <div class="inv-f"><div class="wd"><span class="lbl">Amount in words</span><br><b>${words(tot)}</b><div class="sub" style="margin-top:12px">Goods once sold will not be taken back.</div></div><div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div><span>Round off</span><span>${rs(tot-sub-tax)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div></div><div class="sig"><span>Customer signature</span><span>For Sales Support<br>Authorised signatory</span></div>
  <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}).join("");
  return`<div class="stats"><div class="stat"><b>${shops.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div><div class="row" style="justify-content:flex-end"><button class="btn p" data-pr="all">Print all bills</button></div><div id="bills">${bills}</div>`;
 }
 function render(){
  $("meta").textContent=`${S.load} · ${LOADS[S.load].date} · ${conf()?"Confirmed":"Not confirmed"}`;
- stepper();$("view").innerHTML=[v1,v2,v3][S.step-1]();
+ opts();stepper();$("view").innerHTML=[v1,v2,v3][S.step-1]();
 }
 function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
 $("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
 $("view").onclick=e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
- if(d.go)go(+d.go);else if(d.p){S.pick=d.p;render()}else if(d.c){S.cat=d.c;render()}
+ if(d.go)go(+d.go);else if(d.m){S.mode=d.m;render()}else if(d.p){S.pick=d.p;render()}else if(d.c){S.cat=d.c;render()}
  else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
  else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});try{localStorage.setItem("ss_confirmed",JSON.stringify(done))}catch(x){}S.ask=false;render()}
  else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.toggle("pr-all",d.pr==="all");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print();setTimeout(()=>bs.forEach(x=>x.classList.remove("pr")),500)}};
-$("view").onchange=e=>{if(e.target.id==="shop"){S.shop=e.target.value;render()}if(e.target.id==="tick"){S.tick=e.target.checked;render()}};
+$("view").onchange=e=>{if(e.target.id==="cat"){S.cat=e.target.value;render()}if(e.target.id==="tick"){S.tick=e.target.checked;render()}};
 $("view").oninput=e=>{if(e.target.id==="q"){S.q=e.target.value;const p=e.target.selectionStart;render();const q=$("q");q.focus();q.setSelectionRange(p,p)}};
-$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}">${k} · ${v.date}</option>`).join("");
-$("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,shop:"All",cat:"All",q:"",ask:false,tick:false});render()};
+function opts(){$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}" ${k===S.load?"selected":""}>${k} · ${v.date} · ${done[k]?"✔ Confirmed":"Not confirmed"}</option>`).join("")}
+$("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,mode:"pickup",shop:"All",cat:"All",q:"",ask:false,tick:false});render()};
 render();
 </script></body></html>
