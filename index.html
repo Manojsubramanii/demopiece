@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6b1624">
+<meta name="format-detection" content="telephone=no">
 <title>Sales Support – Pick List, Confirm and Bill</title>
 <link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,15 +16,15 @@
 window.FIREBASE_CONFIG={apiKey:"AIzaSyA-SZshtep-V-18FpibD0lXikkl9hkllio",authDomain:"student-d6b22.firebaseapp.com",projectId:"student-d6b22",appId:"1:216169741429:web:bfe9958aedcf2960d4cc3c"};
 </script>
 <style>
-:root{color-scheme:light;--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df;--on:#fff;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{color-scheme:light;--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df;--on:#fff;--gx:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
 button,select,input{font:inherit;color:var(--ink)}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 h1,h2{font-family:Georgia,"Times New Roman",serif;margin:0}
 h1{font-size:19px}h2{font-size:18px}
-.wrap{max-width:960px;margin:0 auto;padding:0 16px}
+.wrap{max-width:960px;margin:0 auto;padding:0 var(--gx)}
 .sub{color:var(--mu);font-size:13px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .in{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:0 12px;height:42px}
@@ -38,7 +40,7 @@ header h1,header .sub,header .pick label{color:#fff3e4}
 header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
 .pick{display:flex;flex-direction:column;gap:4px}
 .pick label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid #e9c9c0;border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23b0505c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
+.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid #e9c9c0;border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;padding-left:14px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23b0505c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
 
 /* steps */
 .steps{display:flex;gap:8px;margin:16px 0}
@@ -52,7 +54,6 @@ header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
 
 /* pickup tabs */
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-@media(max-width:640px){.tabs{grid-template-columns:1fr}}
 .tab{display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px 16px;border:2px solid var(--ln);border-radius:12px;background:var(--sf);cursor:pointer;min-height:92px}
 .tab b{font:700 19px Georgia,"Times New Roman",serif}
 .tab span{font-size:14px;color:var(--mu)}
@@ -80,7 +81,7 @@ th{font-size:13px;color:var(--mu);font-weight:600;background:var(--sf)}
 tfoot td{font-weight:700}
 tr.cg td{background:var(--bg);padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
 tr.ok td{background:var(--oks)}
-.ik{width:26px;height:26px;cursor:pointer}
+.ik{width:26px;height:26px;cursor:pointer;accent-color:var(--ok)}
 .empty{padding:36px;text-align:center;color:var(--mu)}
 .ph,.pt,.pth{display:none}
 .ct{width:56px}.cq{width:150px}.cw{width:120px}.pth{width:70px}
@@ -117,6 +118,82 @@ tr.ok td{background:var(--oks)}
 .sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}
 .sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
 
+/* phone friendliness (screen only; printing is unchanged) */
+.bar{margin-top:16px;justify-content:flex-end}
+.bm{display:none}
+.kg{white-space:nowrap}
+tr.t{cursor:pointer;-webkit-user-select:none;user-select:none}
+button,select,input,.tab{touch-action:manipulation}
+@media screen and (max-width:640px){
+ .sub{font-size:14px}
+ /* header: title + Import on one line, loading picker full width below */
+ header .wrap{gap:8px;padding-top:10px;padding-bottom:12px}
+ header .row{display:contents}
+ header .wrap>div:first-child{order:1;flex:1 1 0;min-width:0}
+ #imp{order:2;height:48px;padding:0 14px}
+ .bd{display:none}
+ .pick{order:3;flex:1 1 100%}
+ .pick select{width:100%;min-width:0;height:48px;font-size:15px;padding-left:12px;padding-right:38px}
+ /* steps */
+ .steps{gap:6px;margin:12px 0}
+ .step{padding:8px 6px;justify-content:center;text-align:center;line-height:1.2;min-height:50px}
+ /* Pickup 1 / 2 / 3 buttons: three small buttons that stay at the top while scrolling */
+ .tabs{grid-template-columns:repeat(3,1fr);gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin:0 calc(-1*var(--gx));padding:8px var(--gx);box-shadow:0 1px 0 var(--ln)}
+ .tab{min-height:0;padding:8px 6px;align-items:center;text-align:center;border-radius:10px}
+ .tab b{font-size:16px}
+ .tab span{display:none}
+ .tab em{font-size:12px;padding-top:3px;text-align:center;line-height:1.25}
+ .tab .dot{display:none}
+ .tab .kg{display:block}
+ .pkb{padding:12px 14px;margin-top:12px;scroll-margin-top:96px}
+ .pkb h2{font-size:20px}
+ .pkb .pks{font-size:14px}
+ .pkb>.row{width:100%;justify-content:space-between}
+ /* product lists: one card per product, big tick box, quantity on the right */
+ .pk table,.pk tbody,.pk tfoot{display:block}
+ .pk thead{display:none}
+ .pk tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"pn pq" "pw pq";column-gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--ln)}
+ .pk tbody tr:first-child{border-top:0}
+ .pk tr.t{grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"tk pn pq" "tk pw pq";column-gap:10px}
+ .pk td{display:block;border:0;padding:0;text-align:left;overflow-wrap:anywhere}
+ .pk td.pt,.pk td.tq{display:none}
+ .pk .tk{grid-area:tk;justify-self:center}
+ .pk .pn{grid-area:pn;font-size:17px}
+ .pk .pq{grid-area:pq;text-align:right!important;font-size:20px}
+ .pk .pw{grid-area:pw;text-align:left!important;font-size:14px;color:var(--mu);margin-top:2px}
+ .pk .pw::after,.pk .tkg::after{content:" kg"}
+ .pk .ik{width:30px;height:30px;display:block}
+ .pk tr.ok{background:var(--oks)}
+ .pk tr.ok td{background:none}
+ .pk tr.t:active{background:var(--acs)}
+ .pk tr.cg{display:block;padding:0}
+ .pk tr.cg td{padding:8px 14px}
+ .pk tr.tf{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"tn tkg";background:var(--acs)}
+ .pk .tn{grid-area:tn}
+ .pk .tkg{grid-area:tkg;text-align:right!important}
+ /* bills: one compact line per product */
+ .bill{padding:14px}
+ .bill thead{display:none}
+ .bill table,.bill tbody{display:block}
+ .bill tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;padding:10px 0;border-top:1px solid var(--ln);align-items:start}
+ .bill tr:first-child{border-top:0}
+ .bill td{display:block;border:0;padding:0}
+ .bill td.bi,.bill td.bq,.bill td.br,.bill td.bgst{display:none}
+ .bill .bm{display:block;font-size:14px;color:var(--mu);margin-top:2px}
+ .bill td.ba{font-weight:700}
+ .inv-h h2{font-size:20px}
+ .inv-h .n{text-align:left!important;white-space:normal}
+ .sig span{min-width:0;flex:1}
+ .fl{max-width:none}
+ /* bottom action bars: the main button is always in thumb reach */
+ .bar,.bar2{position:sticky;bottom:0;z-index:6;margin-left:calc(-1*var(--gx));margin-right:calc(-1*var(--gx));padding:10px var(--gx) calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg);border:0;border-top:1px solid var(--ln);border-radius:0}
+ .bar .btn,.bar2 .btn{flex:1}
+ .panel.bar2{background:var(--sf);margin-top:14px}
+ .ban.bar2{background:var(--oks);margin-top:14px}
+ .ban.bar2 span{flex:1 1 100%}
+ .hm{display:none}
+}
+
 /* printing */
 @media print{
  body{background:#fff}
@@ -134,7 +211,7 @@ tr.ok td{background:var(--oks)}
 </style></head><body>
 <header><div class="wrap">
  <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
- <div class="row" style="align-items:flex-end"><div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div><button class="btn" id="imp">📥 Import Excel</button></div>
+ <div class="row" style="align-items:flex-end"><div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div><button class="btn" id="langToggle" type="button">தமிழ்</button><button class="btn" id="imp">📥 Import<span class="bd"> Excel</span></button></div>
 </div></header>
 <main class="wrap">
  <nav class="steps" id="steps" aria-label="Steps"></nav>
@@ -166,6 +243,43 @@ const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"
 const pl=(n,u)=>n+" "+u+(n>1?"s":"");
 let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
 const S={load:Object.keys(LOADS)[0],step:1,pk:0,ticks:(()=>{try{return JSON.parse(localStorage.getItem("ss_ticks")||"{}")}catch(e){return{}}})(),ask:false};
+let translations={},language="en";
+// Translation lookup is display-only. Missing entries always remain in their original English.
+const productText=name=>language==="ta"?(translations[name]||name):name;
+const pickupText=value=>language==="ta"?(translations[value]||value):value;
+
+// Load the translation workbook from the same website folder as this HTML file.
+// Expected filename: tamil-translations.xlsx (columns: English, Tamil).
+async function loadTamilTranslations(){
+ try{
+  if(!window.XLSX)throw new Error("Excel reader library is unavailable");
+  const response=await fetch("./tamil-translations.xlsx",{cache:"no-cache"});
+  if(!response.ok)throw new Error("tamil-translations.xlsx was not found (HTTP "+response.status+")");
+  const bytes=await response.arrayBuffer();
+  const workbook=XLSX.read(bytes,{type:"array"});
+  const sheet=workbook.Sheets[workbook.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
+  if(!rows.length)throw new Error("The translation workbook is empty");
+  const headers=rows[0].map(v=>String(v).trim().toLowerCase());
+  const en=headers.findIndex(v=>["english","english name","source","product","product name"].includes(v));
+  const ta=headers.findIndex(v=>["tamil","tamil name","translation","translated name"].includes(v));
+  if(en<0||ta<0)throw new Error("The workbook needs English and Tamil column headings");
+  const map={};
+  rows.slice(1).forEach(row=>{
+   const english=String(row[en]??"").trim();
+   const tamil=String(row[ta]??"").trim();
+   if(english&&tamil)map[english]=tamil;
+  });
+  translations=map;
+  const note=document.getElementById("sync");
+  if(note)note.textContent="Tamil translations loaded: "+Object.keys(map).length+" entries.";
+  if(language==="ta")render();
+ }catch(error){
+  translations={};
+  const note=document.getElementById("sync");
+  if(note)note.textContent="Tamil translation file not loaded. Missing translations will remain in English. Details: "+error.message;
+ }
+}
 // Saving: always on this device; also to Firebase when it is set up (see the Firebase script at the bottom).
 const CLOUD=window.CLOUD={on:false,push(){},say(t){const e=document.getElementById("sync");if(e)e.textContent=t}};
 const ls=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -197,29 +311,30 @@ const kProd=x=>S.load+"|"+x.name;
 const pkItems=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>i<2?PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name):cmpl(a,b));
 const pkKeys=i=>pkItems(i).map(kProd);
 function pkSum(i){const it=pkItems(i);return{n:it.length,u:"product",wt:kgOf(it)}}
+const ea=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
 function ptable(it,tk,key,groups){
  let cat="",rows="";
  it.forEach(x=>{
-  if(groups&&x.cat!==cat){cat=x.cat;rows+=`<tr class="cg"><td colspan="9">${cat}</td></tr>`}
+  if(groups&&x.cat!==cat){cat=x.cat;rows+=`<tr class="cg"><td colspan="9">${pickupText(cat)}</td></tr>`}
   const k=key(x),on=tk&&S.ticks[k];
-  rows+=`<tr class="${on?"ok":""}">${tk?`<td><input type="checkbox" class="ik" data-k="${k}" ${on?"checked":""} aria-label="Loaded ${x.name}"></td>`:""}<td><b>${x.name}</b></td><td class="n qb">${pl(x.qty,x.unit)}</td><td class="n">${fmt(x.wt)}</td><td class="pt">☐</td></tr>`});
- return`<div class="tw"><table><thead><tr>${tk?'<th class="ct"></th>':""}<th>Product</th><th class="n cq">Quantity</th><th class="n cw">Weight (kg)</th><th class="pth">Loaded</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="${tk?2:1}">Total</td><td></td><td class="n">${fmt(kgOf(it))}</td><td class="pt"></td></tr></tfoot></table></div>`}
+  rows+=`<tr class="${tk?"t ":""}${on?"ok":""}"${tk?` data-k="${ea(k)}"`:""}>${tk?`<td class="tk"><input type="checkbox" class="ik" data-k="${ea(k)}" ${on?"checked":""} aria-label="Loaded ${ea(productText(x.name))}"></td>`:""}<td class="pn"><b>${productText(x.name)}</b></td><td class="n qb pq">${pl(x.qty,x.unit)}</td><td class="n pw">${fmt(x.wt)}</td><td class="pt">☐</td></tr>`});
+ return`<div class="tw"><table><thead><tr>${tk?'<th class="ct"></th>':""}<th>${pickupText("Product")}</th><th class="n cq">${pickupText("Quantity")}</th><th class="n cw">${pickupText("Weight (kg)")}</th><th class="pth">${pickupText("Loaded")}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr class="tf"><td colspan="${tk?2:1}" class="tn">${pickupText("Total")}</td><td class="tq"></td><td class="n tkg">${fmt(kgOf(it))}</td><td class="pt"></td></tr></tfoot></table></div>`}
 // o.tk = show tick boxes (step 2), o.pr = show the Print button (step 1)
 function pickup(i,o){
  const p=PICKUPS[i],s=pkSum(i),tk=!!o.tk,ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,it=pkItems(i);
- const body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">Nothing in ${p.n} for this loading.</div>`;
+ const body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">${language==="ta"?"இந்த "+pickupText(p.n)+"-இல் இந்த லோடிங்கிற்கு பொருட்கள் இல்லை.":"Nothing in "+p.n+" for this loading."}</div>`;
  const sum=`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`;
- return`<div class="pk"><div class="pkb"><div><h2>${p.n}</h2><div class="pks">${p.sub}</div><div class="ph">${S.load} · ${LOADS[S.load].date}</div></div><div class="row"><span class="sum">${tk?`${nt} of ${ks.length} ticked · `:""}${sum}</span>${o.pr?`<button class="btn noprint" data-print="1">🖨 Print</button>`:""}</div></div>${body}</div>`}
+ return`<div class="pk"><div class="pkb"><div><h2>${pickupText(p.n)}</h2><div class="pks">${language==="ta"?(p.n==="Pickup 1"?"அரிசி, மளிகை மற்றும் லிங்கா (மூட்டைகள்)":p.n==="Pickup 2"?"எண்ணெய் பெட்டி, எண்ணெய் டின் மற்றும் உலர் பழப் பெட்டிகள்":"கிலோ / எண்ணிக்கையில் விற்கப்படும் பொருட்கள், டைகர் மற்றும் மற்றவை"):p.sub}</div><div class="ph">${S.load} · ${LOADS[S.load].date}</div></div><div class="row"><span class="sum">${tk?`${nt} of ${ks.length} ticked · `:""}${sum}</span>${o.pr?`<button class="btn noprint" data-print="1">🖨 Print</button>`:""}</div></div>${body}</div>`}
 // Pickup buttons: one per pickup. On the Confirm step each shows how many of its items are ticked.
-function pkTabs(tk){return`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i),ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,all=tk&&ks.length>0&&nt===ks.length;return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${p.n}${all?" ✓":""}</b><span>${p.sub}</span><em>${tk?`${nt} of ${ks.length} ticked`:`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`}</em></button>`}).join("")}</div>`}
+function pkTabs(tk){return`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i),ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,all=tk&&ks.length>0&&nt===ks.length;return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${pickupText(p.n)}${all?" ✓":""}</b><span>${language==="ta"?(p.n==="Pickup 1"?"அரிசி, மளிகை மற்றும் லிங்கா":p.n==="Pickup 2"?"எண்ணெய் மற்றும் உலர் பழங்கள்":"மற்ற பொருட்கள்"):p.sub}</span><em>${tk?`${nt} of ${ks.length} ticked`:`${pl(s.n,s.u)}<span class="dot"> · </span><span class="kg">${fmt(s.wt)} kg</span>`}</em></button>`}).join("")}</div>`}
 function v1(){
- const nx=`<div class="row noprint" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
+ const nx=`<div class="row noprint bar"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
  return pkTabs(false)+pickup(S.pk,{pr:1})+nx;
 }
 function v2(){
  const ks=PICKUPS.flatMap((_,i)=>pkKeys(i)),nt=ks.filter(k=>S.ticks[k]).length;let act;
- if(conf())act=`<div class="ban"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
- else act=`<div class="panel"><b>${nt} of ${ks.length} items ticked</b><div class="sub">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
+ if(conf())act=`<div class="ban bar2"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
+ else act=`<div class="panel bar2"><b>${nt} of ${ks.length} items ticked</b><div class="sub hm">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
  <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${nt===ks.length?"":"disabled"}>Confirm loading</button></div>
  ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
  return`<h2 style="margin:6px 0 0">Check before confirming</h2><div class="sub">Tick each item as it is loaded. Use the Pickup buttons to move between pickups.</div>`+pkTabs(!conf())+pickup(S.pk,{tk:!conf()})+act;
@@ -228,7 +343,7 @@ function v3(){
  const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
  const bills=shops.map((s,i)=>{const ls=a.filter(l=>l.shop===s),sub=ls.reduce((x,l)=>x+l.amt,0),tax=ls.reduce((x,l)=>x+l.tax,0),tot=Math.round(sub+tax);gt+=tot;
  return`<section class="card bill" data-b="${i}"><div class="inv-h"><div><h2>Sales Support</h2><div class="sub">Tax Invoice</div></div><div class="n"><b>Invoice No: ${no}-${String(i+1).padStart(2,"0")}</b><div class="sub">Date: ${LOADS[S.load].date}</div><div class="sub">Loading: ${S.load}</div></div></div><div class="inv-m"><div><span class="lbl">Bill to</span><br><b>${s}</b><div class="sub">${ls[0].area}</div></div><div><span class="lbl">Details</span><div class="sub">Items: ${ls.length}</div><div class="sub">Ref bill: ${[...new Set(ls.map(l=>l.b).filter(Boolean))].join(", ")||"–"}</div><div class="sub">Total weight: ${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</div></div></div>
- <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th class="n">Qty</th><th class="n">Rate (₹)</th><th class="n">GST</th><th class="n">Amount (₹)</th></tr></thead><tbody>${ls.map((l,j)=>`<tr><td>${j+1}</td><td>${l.name}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${rs(l.rate)}</td><td class="n">${l.gst}%</td><td class="n">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
+ <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th class="n">Qty</th><th class="n">Rate (₹)</th><th class="n">GST</th><th class="n">Amount (₹)</th></tr></thead><tbody>${ls.map((l,j)=>`<tr><td class="bi">${j+1}</td><td class="bn">${l.name}<span class="bm">${pl(l.qty,l.unit)} × ${rs(l.rate)} · GST ${l.gst}%</span></td><td class="n bq">${pl(l.qty,l.unit)}</td><td class="n br">${rs(l.rate)}</td><td class="n bgst">${l.gst}%</td><td class="n ba">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
  
  <div class="inv-f"><div class="wd"><span class="lbl">Amount in words</span><br><b>${words(tot)}</b><div class="sub" style="margin-top:12px">Goods once sold will not be taken back.</div></div><div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div><span>Round off</span><span>${rs(tot-sub-tax)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div></div><div class="sig"><span>Customer signature</span><span>For Sales Support<br>Authorised signatory</span></div>
  <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}).join("");
@@ -279,16 +394,17 @@ function vi(){
  return h}
 function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
 $("imp").onclick=()=>go(0);
+$("langToggle").onclick=()=>{language=language==="en"?"ta":"en";$("langToggle").textContent=language==="en"?"தமிழ்":"English";render()};
 $("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
-$("view").onclick=e=>{const b=e.target.closest("button");if(!b)return;const d=b.dataset;
- if(b.id==="go-imp")doImport();else if(b.id==="clr")clearData();else if(d.go)go(+d.go);else if(d.t){S.pk=+d.t;render()}else if(d.print)window.print();
+$("view").onclick=e=>{const r=e.target.closest("tr.t");if(r&&r.dataset.k&&!e.target.closest("button")){if(!e.target.closest(".ik")){S.ticks[r.dataset.k]=!S.ticks[r.dataset.k];saveProgress();render()}return}const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+ if(b.id==="go-imp")doImport();else if(b.id==="clr")clearData();else if(d.go)go(+d.go);else if(d.t){S.pk=+d.t;render();const bn=document.querySelector(".pkb");if(bn&&bn.getBoundingClientRect().top<0)bn.scrollIntoView({block:"start"})}else if(d.print)window.print();
  else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
  else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});saveProgress();S.ask=false;render()}
  else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.add("pb");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print()}};
 $("view").onchange=e=>{const t=e.target;if(t.id==="fl"&&t.files[0])readFile(t.files[0]);if(t.classList.contains("mp")){IMP.map[t.dataset.f]=t.value;render()}if(t.classList.contains("cm")){IMP.cm[decodeURIComponent(t.dataset.r)]=t.value}if(t.classList.contains("ik")){S.ticks[t.dataset.k]=t.checked;saveProgress();render()}};
 function opts(){$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}" ${k===S.load?"selected":""}>${k} · ${v.date} · ${done[k]?"✔ Confirmed":"Not confirmed"}</option>`).join("")}
 $("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,pk:0,ask:false});render()};
-CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.");render();
+CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.");render();loadTamilTranslations();
 </script>
 <script>
 // Firebase backend (Firestore only, no sign-in). Does nothing until FIREBASE_CONFIG at the top of this file is filled in.
