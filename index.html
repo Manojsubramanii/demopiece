@@ -1,14 +1,17 @@
+
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sales Support – Pick List, Confirm and Bill</title>
+<link rel="icon" href="data:,">
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ==== FIREBASE SETUP ====
    To save data in the cloud, paste your Firebase web app config below
    (Firebase console > Project settings > Your apps > Web app > Config).
-   Leave the YOUR_... placeholders as they are to run without the cloud (data then stays in this browser). */
+   Leave the YOUR_... placeholders as they are to run without the cloud (data then stays in this browser).
+   There is no sign-in: your Firestore rules must allow read and write on the "salesSupport" collection. */
 window.FIREBASE_CONFIG={apiKey:"AIzaSyA-SZshtep-V-18FpibD0lXikkl9hkllio",authDomain:"student-d6b22.firebaseapp.com",projectId:"student-d6b22",appId:"1:216169741429:web:bfe9958aedcf2960d4cc3c"};
 </script>
 <style>
@@ -114,17 +117,10 @@ tr.ok td{background:var(--oks)}
 .sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}
 .sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
 
-/* cloud sign-in (only shown when Firebase is set up) */
-#auth{position:fixed;inset:0;z-index:20;background:var(--bg);display:grid;place-items:center;padding:16px}
-#auth[hidden]{display:none}
-#auth form{width:min(380px,100%);display:grid;gap:12px;margin:0}
-#auth .fl{max-width:none}
-#auth .in{height:48px;font-size:16px}
-
 /* printing */
 @media print{
  body{background:#fff}
- header,#steps,.note,.noprint,#auth{display:none!important}
+ header,#steps,.note,.noprint{display:none!important}
  .card{box-shadow:none;break-inside:avoid;margin-top:10px}
  .ch{background:none}
  .pkb{background:none;color:#000;border-radius:0;border-bottom:3px solid #000;padding:0 0 8px;margin-top:0}
@@ -136,7 +132,6 @@ tr.ok td{background:var(--oks)}
  .bill{border:0;margin:0 0 20px}
 }
 </style></head><body>
-<div id="auth" hidden><form id="authf" class="panel"><h2>Sales Support</h2><div class="sub">Sign in to use the shared cloud data.</div><label class="fl">Email<input id="em" class="in" type="email" autocomplete="username" required></label><label class="fl">Password<input id="pw" class="in" type="password" autocomplete="current-password" required></label><div id="aerr" class="warn" role="alert" hidden></div><button class="btn p">Sign in</button></form></div>
 <header><div class="wrap">
  <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
  <div class="row" style="align-items:flex-end"><div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div><button class="btn" id="imp">📥 Import Excel</button></div>
@@ -298,38 +293,31 @@ $("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,pk:0,ask:fals
 CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.");render();
 </script>
 <script>
-// Firebase backend (Firestore + email/password sign-in). Does nothing until FIREBASE_CONFIG at the top of this file is filled in.
+// Firebase backend (Firestore only, no sign-in). Does nothing until FIREBASE_CONFIG at the top of this file is filled in.
+// Your Firestore rules must allow read and write on salesSupport/{doc}.
 (async()=>{
  const C=window.FIREBASE_CONFIG||{},CLOUD=window.CLOUD,$=id=>document.getElementById(id);
  if(!C.apiKey||!C.projectId||/^YOUR_/.test(C.apiKey))return;
  const B="https://www.gstatic.com/firebasejs/12.4.0/";
- let App,Auth,FS;
- try{[App,Auth,FS]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-auth.js"),import(B+"firebase-firestore.js")])}
+ let App,FS;
+ try{[App,FS]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-firestore.js")])}
  catch(e){console.error(e);CLOUD.say("⚠ Cloud sync could not start (no internet?). Saved on this device only.");return}
- const app=App.initializeApp(C),auth=Auth.getAuth(app);
+ const app=App.initializeApp(C);
  const db=FS.initializeFirestore(app,{localCache:FS.persistentLocalCache({tabManager:FS.persistentMultipleTabManager()})});
  const ref=k=>FS.doc(db,"salesSupport",k);
- const say=(t,out)=>{const e=$("sync");e.textContent=t+" ";if(out){const b=document.createElement("button");b.className="lnk";b.textContent="Sign out";b.onclick=()=>Auth.signOut(auth);e.appendChild(b)}};
+ const say=t=>{$("sync").textContent=t};
  CLOUD.on=true;
  // Each document holds one JSON string (Firestore does not allow arrays inside arrays)
- CLOUD.push=(k,o)=>{const u=auth.currentUser;if(!u)return;
-  (o===null?FS.deleteDoc(ref(k)):FS.setDoc(ref(k),{json:JSON.stringify(o),by:u.email,updatedAt:FS.serverTimestamp()})).catch(e=>say("⚠ Could not save to the cloud: "+e.code,1))};
- $("authf").onsubmit=async e=>{e.preventDefault();const er=$("aerr");er.hidden=true;
-  try{await Auth.signInWithEmailAndPassword(auth,$("em").value.trim(),$("pw").value)}
-  catch(x){er.textContent=["auth/invalid-credential","auth/wrong-password","auth/user-not-found","auth/invalid-email"].includes(x.code)?"Wrong email or password.":x.code==="auth/network-request-failed"?"No internet connection.":"Sign-in failed ("+x.code+").";er.hidden=false}};
- let unsub=[],first={};
- Auth.onAuthStateChanged(auth,u=>{
-  unsub.forEach(f=>f());unsub=[];
-  $("auth").hidden=!!u;
-  if(!u){say("Signed out. Cloud sync is paused.");return}
-  $("pw").value="";say("☁ Saved to the cloud · "+u.email,1);
-  ["data","progress"].forEach(k=>unsub.push(FS.onSnapshot(ref(k),s=>{
-   if(s.metadata.hasPendingWrites)return;
-   if(s.exists()){try{window.cloudIn(k,JSON.parse(s.data().json))}catch(x){console.error(x)}}
-   else if(!first[k]){const o=window.cloudLocal(k);if(o)CLOUD.push(k,o)}
-   first[k]=1;
-  },e=>say("⚠ Cloud error: "+e.code+". Check the Firestore rules.",1))));
- });
+ CLOUD.push=(k,o)=>{
+  (o===null?FS.deleteDoc(ref(k)):FS.setDoc(ref(k),{json:JSON.stringify(o),updatedAt:FS.serverTimestamp()})).catch(e=>say("⚠ Could not save to the cloud: "+e.code))};
+ say("☁ Saved to the cloud");
+ const first={};
+ ["data","progress"].forEach(k=>FS.onSnapshot(ref(k),s=>{
+  if(s.metadata.hasPendingWrites)return;
+  if(s.exists()){try{window.cloudIn(k,JSON.parse(s.data().json))}catch(x){console.error(x)}}
+  else if(!first[k]){const o=window.cloudLocal(k);if(o)CLOUD.push(k,o)}
+  first[k]=1;
+ },e=>say("⚠ Cloud error: "+e.code+". Check the Firestore rules.")));
 })();
 </script>
 </body></html>
