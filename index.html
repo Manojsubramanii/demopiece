@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -60,6 +59,7 @@ header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
 .tab em{font-style:normal;font-size:14px;font-weight:600;margin-top:auto;padding-top:6px}
 .tab[aria-selected=true]{border-color:var(--ac);background:var(--acs);box-shadow:inset 0 0 0 1px var(--ac)}
 .tab[aria-selected=true] b{color:var(--ac)}
+.sub+.tabs{margin-top:12px}
 
 /* pickup banner + tables */
 .pkb{margin-top:18px;background:var(--ac);color:var(--on);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -144,11 +144,11 @@ tr.ok td{background:var(--oks)}
 <script>
 // Three pickups.
 // Pickup 1 = bags of Rice, Rice 2, Grocery and Linga. Pickup 2 = Oil Box, Oil Tin and Dry Fruit boxes.
-// Pickup 3 (Shopwise) = everything else: loose items sold by kg or by piece, Tiger, and anything not listed.
+// Pickup 3 = everything else: loose items sold by kg or by piece, Tiger, and anything not listed.
 const PICKUPS=[
  {n:"Pickup 1",sub:"Rice, Groceries &amp; Linga (bags)",cats:["Rice","Rice 2","Grocery","Linga"]},
  {n:"Pickup 2",sub:"Oil Box, Oil Tin &amp; Dry Fruit boxes",cats:["Oil Box","Oil Tin","Dry Fruits"]},
- {n:"Pickup 3 (Shopwise)",sub:"Loose kg / pieces, Tiger and the rest, shop by shop"}
+ {n:"Pickup 3",sub:"Loose kg / pieces, Tiger and the rest"}
 ];
 // Product master: name, category, unit, kg/unit, rate per unit (₹), GST %, pieces/unit
 let P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5,1],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],g2:["Sugar 50 kg","Grocery","bag",50,2250,5,1],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5,25],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],r4:["Seeraga Samba Rice 25 kg","Rice 2","bag",25,1800,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5,20],l1:["Linga Item 25 kg","Linga","bag",25,1700,5,1],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10],r5:["Rice Loose (per kg)","Rice","kg",1,52,5,1],g4:["Sugar Loose (per kg)","Grocery","kg",1,45,5,1],d3:["Cashew Loose (per kg)","Dry Fruits","kg",1,750,5,1],o3:["Sunflower Oil 1 L pouch","Oil Box","pcs",1,115,5,1]};
@@ -192,13 +192,11 @@ function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{n
 const loose=u=>/^(kgs?|pcs?|pieces?|nos?)$/i.test(String(u).trim());
 const inPk=(i,x)=>{const a=!loose(x.unit)&&PICKUPS[0].cats.includes(x.cat),b=!loose(x.unit)&&PICKUPS[1].cats.includes(x.cat);return i===0?a:i===1?b:!a&&!b};
 const kgOf=it=>it.reduce((a,x)=>a+x.wt,0);
-const kProd=x=>S.load+"|"+x.name,kShop=(s,x)=>S.load+"|"+s+"|"+x.name;
-// Pickup 1 and 2: one list of products (totalled over all shops), in the order of the categories above
-const pkItems=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name));
-// Pickup 3: the leftover items, grouped by shop in delivery-route order
-function pkShops(){const a=lines().filter(l=>inPk(2,l));return shopsOf(a).map(s=>{const m={};a.filter(l=>l.shop===s).forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return{shop:s,area:a.find(l=>l.shop===s).area,items:Object.values(m)}})}
-const pkKeys=i=>i<2?pkItems(i).map(kProd):pkShops().flatMap(s=>s.items.map(x=>kShop(s.shop,x)));
-function pkSum(i){if(i<2){const it=pkItems(i);return{n:it.length,u:"product",wt:kgOf(it)}}const sh=pkShops();return{n:sh.length,u:"shop",wt:sh.reduce((a,s)=>a+kgOf(s.items),0)}}
+const kProd=x=>S.load+"|"+x.name;
+// One list of products per pickup (totalled over all shops). Pickups 1 and 2 follow their category order above; Pickup 3 follows the bill category order.
+const pkItems=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>i<2?PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name):cmpl(a,b));
+const pkKeys=i=>pkItems(i).map(kProd);
+function pkSum(i){const it=pkItems(i);return{n:it.length,u:"product",wt:kgOf(it)}}
 function ptable(it,tk,key,groups){
  let cat="",rows="";
  it.forEach(x=>{
@@ -208,15 +206,15 @@ function ptable(it,tk,key,groups){
  return`<div class="tw"><table><thead><tr>${tk?'<th class="ct"></th>':""}<th>Product</th><th class="n cq">Quantity</th><th class="n cw">Weight (kg)</th><th class="pth">Loaded</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="${tk?2:1}">Total</td><td></td><td class="n">${fmt(kgOf(it))}</td><td class="pt"></td></tr></tfoot></table></div>`}
 // o.tk = show tick boxes (step 2), o.pr = show the Print button (step 1)
 function pickup(i,o){
- const p=PICKUPS[i],s=pkSum(i),tk=!!o.tk,ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length;let body;
- if(i<2){const it=pkItems(i);body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">Nothing in ${p.n} for this loading.</div>`}
- else{const sh=pkShops();body=sh.length?sh.map(h=>`<section class="card"><div class="ch"><h2>${h.shop}</h2><span class="sub">${h.area} · ${fmt(kgOf(h.items))} kg</span></div>${ptable(h.items,tk,x=>kShop(h.shop,x),false)}</section>`).join(""):`<div class="empty">Nothing in ${p.n} for this loading.</div>`}
+ const p=PICKUPS[i],s=pkSum(i),tk=!!o.tk,ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,it=pkItems(i);
+ const body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">Nothing in ${p.n} for this loading.</div>`;
  const sum=`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`;
  return`<div class="pk"><div class="pkb"><div><h2>${p.n}</h2><div class="pks">${p.sub}</div><div class="ph">${S.load} · ${LOADS[S.load].date}</div></div><div class="row"><span class="sum">${tk?`${nt} of ${ks.length} ticked · `:""}${sum}</span>${o.pr?`<button class="btn noprint" data-print="1">🖨 Print</button>`:""}</div></div>${body}</div>`}
+// Pickup buttons: one per pickup. On the Confirm step each shows how many of its items are ticked.
+function pkTabs(tk){return`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i),ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,all=tk&&ks.length>0&&nt===ks.length;return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${p.n}${all?" ✓":""}</b><span>${p.sub}</span><em>${tk?`${nt} of ${ks.length} ticked`:`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`}</em></button>`}).join("")}</div>`}
 function v1(){
- const tabs=`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i);return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${p.n}</b><span>${p.sub}</span><em>${pl(s.n,s.u)} · ${fmt(s.wt)} kg</em></button>`}).join("")}</div>`;
  const nx=`<div class="row noprint" style="margin-top:16px;justify-content:flex-end"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
- return tabs+pickup(S.pk,{pr:1})+nx;
+ return pkTabs(false)+pickup(S.pk,{pr:1})+nx;
 }
 function v2(){
  const ks=PICKUPS.flatMap((_,i)=>pkKeys(i)),nt=ks.filter(k=>S.ticks[k]).length;let act;
@@ -224,7 +222,7 @@ function v2(){
  else act=`<div class="panel"><b>${nt} of ${ks.length} items ticked</b><div class="sub">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
  <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${nt===ks.length?"":"disabled"}>Confirm loading</button></div>
  ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
- return`<h2 style="margin:6px 0 0">Check before confirming</h2><div class="sub">Tick each item as it is loaded, pickup by pickup.</div>`+PICKUPS.map((_,i)=>pickup(i,{tk:!conf()})).join("")+act;
+ return`<h2 style="margin:6px 0 0">Check before confirming</h2><div class="sub">Tick each item as it is loaded. Use the Pickup buttons to move between pickups.</div>`+pkTabs(!conf())+pickup(S.pk,{tk:!conf()})+act;
 }
 function v3(){
  const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
@@ -310,14 +308,15 @@ CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.")
  // Each document holds one JSON string (Firestore does not allow arrays inside arrays)
  CLOUD.push=(k,o)=>{
   (o===null?FS.deleteDoc(ref(k)):FS.setDoc(ref(k),{json:JSON.stringify(o),updatedAt:FS.serverTimestamp()})).catch(e=>say("⚠ Could not save to the cloud: "+e.code))};
- say("☁ Saved to the cloud");
+ say("☁ Connecting to the cloud…");
  const first={};
  ["data","progress"].forEach(k=>FS.onSnapshot(ref(k),s=>{
   if(s.metadata.hasPendingWrites)return;
+  if(!s.metadata.fromCache)say("☁ Saved to the cloud");
   if(s.exists()){try{window.cloudIn(k,JSON.parse(s.data().json))}catch(x){console.error(x)}}
   else if(!first[k]){const o=window.cloudLocal(k);if(o)CLOUD.push(k,o)}
   first[k]=1;
- },e=>say("⚠ Cloud error: "+e.code+". Check the Firestore rules.")));
+ },e=>say(e.code==="permission-denied"?"⚠ Cloud blocked: your Firestore rules do not allow read and write on salesSupport. Saved on this device only.":(e.code==="not-found"||e.code==="unavailable")?"⚠ Cannot reach the Firestore database for project "+C.projectId+". Check that it has been created in the Firebase console. Saved on this device only.":"⚠ Cloud error: "+e.code+". Saved on this device only.")));
 })();
 </script>
 </body></html>
