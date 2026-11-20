@@ -1,438 +1,386 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#6b1624">
-<meta name="format-detection" content="telephone=no">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sales Support – Pick List, Confirm and Bill</title>
-<link rel="icon" href="data:,">
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
-/* ==== FIREBASE SETUP ====
-   To save data in the cloud, paste your Firebase web app config below
-   (Firebase console > Project settings > Your apps > Web app > Config).
-   Leave the YOUR_... placeholders as they are to run without the cloud (data then stays in this browser).
-   There is no sign-in: your Firestore rules must allow read and write on the "salesSupport" collection. */
-window.FIREBASE_CONFIG={apiKey:"AIzaSyA-SZshtep-V-18FpibD0lXikkl9hkllio",authDomain:"student-d6b22.firebaseapp.com",projectId:"student-d6b22",appId:"1:216169741429:web:bfe9958aedcf2960d4cc3c"};
-</script>
 <style>
-:root{color-scheme:light;--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df;--on:#fff;--gx:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{--bg:#fffbf1;--sf:#fffffc;--ink:#2e1b1b;--mu:#7d6761;--ln:#eadfca;--ac:#7b1e2b;--acs:#f8ebe4;--ok:#2f7a3f;--oks:#e8f2df}
 *{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "Public Sans","Noto Sans Tamil",system-ui,sans-serif}
 button,select,input{font:inherit;color:var(--ink)}
-:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
-h1,h2{font-family:Georgia,"Times New Roman",serif;margin:0}
-h1{font-size:19px}h2{font-size:18px}
-.wrap{max-width:960px;margin:0 auto;padding:0 var(--gx)}
+h1,h2{font-family:Georgia,serif;margin:0}
+.wrap{max-width:960px;margin:0 auto;padding:0 16px}
 .sub{color:var(--mu);font-size:13px}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.in{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:0 12px;height:42px}
-.btn{height:48px;padding:0 18px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-weight:600;font-size:16px}
-.btn.p{background:var(--ac);border-color:var(--ac);color:var(--on)}
+.btn{height:46px;padding:0 16px;border-radius:10px;border:1px solid var(--ln);background:var(--sf);cursor:pointer;font-weight:600}
+.btn.p{background:var(--ac);border-color:var(--ac);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.lnk{background:none;border:0;padding:0;color:var(--ac);text-decoration:underline;cursor:pointer}
-
-/* header */
-header{background:#6b1624}
+header{background:#6b1624;color:#fff3e4}
 header .wrap{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
-header h1,header .sub,header .pick label{color:#fff3e4}
-header .btn{background:#fff7ea;color:#6b1624;border-color:#e9c9c0;height:52px}
-.pick{display:flex;flex-direction:column;gap:4px}
-.pick label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
-.pick select{height:52px;min-width:min(300px,100%);font-size:17px;font-weight:600;border:2px solid #e9c9c0;border-radius:12px;appearance:none;-webkit-appearance:none;padding-right:44px;padding-left:14px;cursor:pointer;background:var(--sf) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10'%3E%3Cpath d='M1 1l7 7 7-7' fill='none' stroke='%23b0505c' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 16px center}
-
-/* steps */
+header .sub{color:#fff3e4}
+header select{height:46px;border-radius:10px;border:2px solid #e9c9c0;padding:0 10px;font-weight:600;background:var(--sf);max-width:100%}
+header .btn{background:#fff7ea;color:#6b1624}
 .steps{display:flex;gap:8px;margin:16px 0}
-.step{flex:1;display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);cursor:pointer;text-align:left;font-size:16px;font-weight:600}
-.step b{width:30px;height:30px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:15px;flex:none}
-.step[aria-current=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac)}
-.step[aria-current=true] b{background:var(--ac);color:var(--on)}
-.step.done b{background:var(--ok);color:var(--on)}
+.step{flex:1;padding:12px;border:1px solid var(--ln);border-radius:10px;background:var(--sf);cursor:pointer;font-weight:600}
+.step[aria-current=true]{border-color:var(--ac);box-shadow:inset 0 0 0 1px var(--ac);color:var(--ac)}
+.step.done{background:var(--oks)}
 .step:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:640px){.step span{font-size:13px}.step b{display:none}}
-
-/* pickup tabs */
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.tab{display:flex;flex-direction:column;gap:2px;text-align:left;padding:12px 16px;border:2px solid var(--ln);border-radius:12px;background:var(--sf);cursor:pointer;min-height:92px}
-.tab b{font:700 19px Georgia,"Times New Roman",serif}
-.tab span{font-size:14px;color:var(--mu)}
-.tab em{font-style:normal;font-size:14px;font-weight:600;margin-top:auto;padding-top:6px}
-.tab[aria-selected=true]{border-color:var(--ac);background:var(--acs);box-shadow:inset 0 0 0 1px var(--ac)}
-.tab[aria-selected=true] b{color:var(--ac)}
-.sub+.tabs{margin-top:12px}
-
-/* pickup banner + tables */
-.pkb{margin-top:18px;background:var(--ac);color:var(--on);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.pkb h2{font-size:24px;color:var(--on)}
-.pkb .pks{font-size:15px;opacity:.92}
-.pkb .sum{font-size:15px;font-weight:600}
-.pkb .btn{height:44px;background:#fff7ea;color:#6b1624;border-color:#e9c9c0}
-.pk .card{margin-top:10px}
-.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;margin-top:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--acs);flex-wrap:wrap}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tab{padding:10px;border:2px solid var(--ln);border-radius:12px;background:var(--sf);cursor:pointer;text-align:left}
+.tab b{display:block}
+.tab[aria-selected=true]{border-color:var(--ac);background:var(--acs)}
+.pkb{margin-top:14px;background:var(--ac);color:#fff;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:14px;margin-top:12px;overflow:hidden}
+.ch{padding:12px 14px;background:var(--acs)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th,td{padding:12px 14px;text-align:left;border-top:1px solid var(--ln)}
-td{font-size:16px}
-th{font-size:13px;color:var(--mu);font-weight:600;background:var(--sf)}
-.n{text-align:right!important;font-variant-numeric:tabular-nums;white-space:nowrap}
-.qb{font-size:18px;font-weight:700}
-tfoot td{font-weight:700}
-tr.cg td{background:var(--bg);padding:8px 14px;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+th,td{padding:10px 12px;text-align:left;border-top:1px solid var(--ln)}
+th{font-size:13px;color:var(--mu)}
+.n{text-align:right!important;white-space:nowrap}
+tr.cg td{background:var(--bg);font-size:13px;font-weight:700;text-transform:uppercase;color:var(--mu)}
+tr.t{cursor:pointer}
 tr.ok td{background:var(--oks)}
-.ik{width:26px;height:26px;cursor:pointer;accent-color:var(--ok)}
-.empty{padding:36px;text-align:center;color:var(--mu)}
-.ph,.pt,.pth{display:none}
-.ct{width:56px}.cq{width:150px}.cw{width:120px}.pth{width:70px}
-@media(max-width:640px){.ct{width:48px}.cq{width:112px}.cw{width:84px}.qb{font-size:16px}}
-
-/* confirm step + messages */
-.panel{padding:16px;background:var(--sf);border:1px solid var(--ln);border-radius:12px;margin-top:14px}
-.ban{padding:14px 16px;border-radius:12px;background:var(--oks);color:var(--ok);font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}
-.warn{background:var(--acs);border-radius:10px;padding:14px;margin-top:12px}
+.ik{width:24px;height:24px;accent-color:var(--ok)}
+tfoot td{font-weight:700}
+.panel,.warn,.ban{padding:14px;border-radius:12px;margin-top:12px}
+.panel{background:var(--sf);border:1px solid var(--ln)}
+.warn{background:var(--acs)}
+.ban{background:var(--oks);color:var(--ok);font-weight:600;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.bar{margin-top:14px;justify-content:flex-end}
 .note{font-size:12px;color:var(--mu);margin:18px 0 30px}
-.lbl{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
-.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;max-width:300px}
-.fl select{height:48px;font-size:16px;font-weight:600;text-transform:none;letter-spacing:0;border:2px solid var(--ln);border-radius:10px;cursor:pointer}
-
-/* bills */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
-@media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
-.stat{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 14px}
-.stat b{display:block;font-size:22px;line-height:1.2}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:16px}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mu)}
+.fl select{height:44px;border:2px solid var(--ln);border-radius:10px;padding:0 8px;font-weight:600}
 .bill{padding:18px}
 .bill td,.bill th{border:1px solid var(--ln)}
-.bill thead th{background:var(--acs);color:var(--ink)}
-.inv-h{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:12px;border-bottom:3px solid var(--ac);margin-bottom:12px}
-.inv-h h2{font-size:24px;letter-spacing:.02em}
-.inv-m{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-@media(max-width:640px){.inv-m{grid-template-columns:1fr}}
-.inv-m>div{border:1px solid var(--ln);border-radius:8px;padding:10px 12px}
-.inv-f{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:flex-start}
+.inv-h{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:10px;border-bottom:3px solid var(--ac);margin-bottom:12px}
+.inv-f{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px}
 .inv-f .wd{flex:1;min-width:200px}
-.inv-f .tot{margin:0}
-.tot{margin-left:auto;width:min(300px,100%);margin-top:10px}
+.tot{width:min(300px,100%)}
 .tot div{display:flex;justify-content:space-between;padding:3px 0}
 .tot .g{border-top:2px solid var(--ink);margin-top:4px;padding-top:8px;font-size:18px;font-weight:700}
-.sig{display:flex;justify-content:space-between;gap:12px;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}
-.sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:150px}
-
-/* phone friendliness (screen only; printing is unchanged) */
-.bar{margin-top:16px;justify-content:flex-end}
-.bm{display:none}
-.kg{white-space:nowrap}
-tr.t{cursor:pointer;-webkit-user-select:none;user-select:none}
-button,select,input,.tab{touch-action:manipulation}
-@media screen and (max-width:640px){
- .sub{font-size:14px}
- /* header: title + Import on one line, loading picker full width below */
- header .wrap{gap:8px;padding-top:10px;padding-bottom:12px}
- header .row{display:contents}
- header .wrap>div:first-child{order:1;flex:1 1 0;min-width:0}
- #imp{order:2;height:48px;padding:0 14px}
- .bd{display:none}
- .pick{order:3;flex:1 1 100%}
- .pick select{width:100%;min-width:0;height:48px;font-size:15px;padding-left:12px;padding-right:38px}
- /* steps */
- .steps{gap:6px;margin:12px 0}
- .step{padding:8px 6px;justify-content:center;text-align:center;line-height:1.2;min-height:50px}
- /* Pickup 1 / 2 / 3 buttons: three small buttons that stay at the top while scrolling */
- .tabs{grid-template-columns:repeat(3,1fr);gap:6px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);margin:0 calc(-1*var(--gx));padding:8px var(--gx);box-shadow:0 1px 0 var(--ln)}
- .tab{min-height:0;padding:8px 6px;align-items:center;text-align:center;border-radius:10px}
- .tab b{font-size:16px}
- .tab span{display:none}
- .tab em{font-size:12px;padding-top:3px;text-align:center;line-height:1.25}
- .tab .dot{display:none}
- .tab .kg{display:block}
- .pkb{padding:12px 14px;margin-top:12px;scroll-margin-top:96px}
- .pkb h2{font-size:20px}
- .pkb .pks{font-size:14px}
- .pkb>.row{width:100%;justify-content:space-between}
- /* product lists: one card per product, big tick box, quantity on the right */
- .pk table,.pk tbody,.pk tfoot{display:block}
- .pk thead{display:none}
- .pk tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"pn pq" "pw pq";column-gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--ln)}
- .pk tbody tr:first-child{border-top:0}
- .pk tr.t{grid-template-columns:40px minmax(0,1fr) auto;grid-template-areas:"tk pn pq" "tk pw pq";column-gap:10px}
- .pk td{display:block;border:0;padding:0;text-align:left;overflow-wrap:anywhere}
- .pk td.pt,.pk td.tq{display:none}
- .pk .tk{grid-area:tk;justify-self:center}
- .pk .pn{grid-area:pn;font-size:17px}
- .pk .pq{grid-area:pq;text-align:right!important;font-size:20px}
- .pk .pw{grid-area:pw;text-align:left!important;font-size:14px;color:var(--mu);margin-top:2px}
- .pk .pw::after,.pk .tkg::after{content:" kg"}
- .pk .ik{width:30px;height:30px;display:block}
- .pk tr.ok{background:var(--oks)}
- .pk tr.ok td{background:none}
- .pk tr.t:active{background:var(--acs)}
- .pk tr.cg{display:block;padding:0}
- .pk tr.cg td{padding:8px 14px}
- .pk tr.tf{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"tn tkg";background:var(--acs)}
- .pk .tn{grid-area:tn}
- .pk .tkg{grid-area:tkg;text-align:right!important}
- /* bills: one compact line per product */
- .bill{padding:14px}
- .bill thead{display:none}
- .bill table,.bill tbody{display:block}
- .bill tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;padding:10px 0;border-top:1px solid var(--ln);align-items:start}
- .bill tr:first-child{border-top:0}
- .bill td{display:block;border:0;padding:0}
- .bill td.bi,.bill td.bq,.bill td.br,.bill td.bgst{display:none}
- .bill .bm{display:block;font-size:14px;color:var(--mu);margin-top:2px}
- .bill td.ba{font-weight:700}
- .inv-h h2{font-size:20px}
- .inv-h .n{text-align:left!important;white-space:normal}
- .sig span{min-width:0;flex:1}
- .fl{max-width:none}
- /* bottom action bars: the main button is always in thumb reach */
- .bar,.bar2{position:sticky;bottom:0;z-index:6;margin-left:calc(-1*var(--gx));margin-right:calc(-1*var(--gx));padding:10px var(--gx) calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg);border:0;border-top:1px solid var(--ln);border-radius:0}
- .bar .btn,.bar2 .btn{flex:1}
- .panel.bar2{background:var(--sf);margin-top:14px}
- .ban.bar2{background:var(--oks);margin-top:14px}
- .ban.bar2 span{flex:1 1 100%}
- .hm{display:none}
-}
-
-/* printing */
-@media print{
- body{background:#fff}
- header,#steps,.note,.noprint{display:none!important}
- .card{box-shadow:none;break-inside:avoid;margin-top:10px}
- .ch{background:none}
- .pkb{background:none;color:#000;border-radius:0;border-bottom:3px solid #000;padding:0 0 8px;margin-top:0}
- .pkb h2,.pkb .pks{color:#000}
- .ph{display:block;font-size:14px;font-weight:700;margin-top:4px}
- .pt,.pth{display:table-cell}
- .pt{font-size:20px;text-align:center}
- body.pb .bill:not(.pr){display:none}
- .bill{border:0;margin:0 0 20px}
-}
+.sig{display:flex;justify-content:space-between;margin-top:40px;font-size:13px;color:var(--mu);text-align:center}
+.sig span{border-top:1px solid var(--ln);padding-top:6px;min-width:140px}
+.stats{display:flex;gap:10px;margin-top:14px}
+.stat{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:10px 14px}
+.stat b{display:block;font-size:22px}
+.chk{margin-top:12px;padding:14px 16px;border-radius:14px;background:var(--sf);border:1px solid var(--ln)}
+.chk-t{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:18px}
+.chk-t b{font-size:30px;color:var(--ac)}
+.prog{height:12px;background:var(--ln);border-radius:99px;overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ok));transition:width .3s}
+tr.t td{padding:16px 12px}
+tr.t .ik{width:32px;height:32px}
+tr.t:not(.ok) td:first-child{border-left:5px solid var(--ac)}
+tr.ok td:first-child{border-left:5px solid var(--ok)}
+tr.ok td b{color:var(--ok)}
+.btn.big{height:54px;font-size:18px;padding:0 26px}
+.btn.p:not(:disabled){box-shadow:0 4px 14px rgba(123,30,43,.35)}
+.modal{position:fixed;inset:0;background:rgba(30,10,10,.55);display:grid;place-items:center;padding:16px;z-index:50;animation:fd .2s}
+.mbox{background:var(--sf);border-radius:18px;padding:28px 24px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);animation:pop .25s}
+.mic{width:64px;height:64px;border-radius:50%;background:var(--ok);color:#fff;font-size:34px;display:grid;place-items:center;margin:0 auto 12px}
+@keyframes fd{from{opacity:0}}@keyframes pop{from{transform:scale(.85);opacity:0}}
+@media(max-width:640px){.bar{position:sticky;bottom:0;background:var(--bg);padding:10px 0;margin:0}.bar .btn{flex:1}.sig span{min-width:0;flex:1}}
+@media print{body{background:#fff}header,.steps,.note,.noprint{display:none!important}.card{break-inside:avoid}body.pb .bill:not(.pr){display:none}}
 </style></head><body>
 <header><div class="wrap">
  <div><h1>Sales Support</h1><div class="sub" id="meta"></div></div>
- <div class="row" style="align-items:flex-end"><div class="pick"><label for="load">Select loading ▾</label><select id="load"></select></div><button class="btn" id="langToggle" type="button">தமிழ்</button><button class="btn" id="imp">📥 Import<span class="bd"> Excel</span></button></div>
+ <div class="row"><select id="load" aria-label="Select loading"></select><button class="btn" id="lang">தமிழ்</button><button class="btn" id="sv">🗂 Saved bills</button><button class="btn" id="imp">📥 Import</button></div>
 </div></header>
-<main class="wrap">
- <nav class="steps" id="steps" aria-label="Steps"></nav>
- <div id="view"></div>
- <p class="note" id="sync"></p>
-</main>
+<main class="wrap"><nav class="steps" id="steps"></nav><div id="view"></div><p class="note" id="msg"></p></main>
 <script>
-// Three pickups.
-// Pickup 1 = bags of Rice, Rice 2, Grocery and Linga. Pickup 2 = Oil Box, Oil Tin and Dry Fruit boxes.
-// Pickup 3 = everything else: loose items sold by kg or by piece, Tiger, and anything not listed.
-const PICKUPS=[
- {n:"Pickup 1",sub:"Rice, Groceries &amp; Linga (bags)",cats:["Rice","Rice 2","Grocery","Linga"]},
- {n:"Pickup 2",sub:"Oil Box, Oil Tin &amp; Dry Fruit boxes",cats:["Oil Box","Oil Tin","Dry Fruits"]},
- {n:"Pickup 3",sub:"Loose kg / pieces, Tiger and the rest"}
-];
-// Product master: name, category, unit, kg/unit, rate per unit (₹), GST %, pieces/unit
-let P={r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],r2:["Basmati Rice 10 kg","Rice","bag",10,1100,5,1],r3:["Idli Rice 26 kg","Rice","bag",26,1500,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],g2:["Sugar 50 kg","Grocery","bag",50,2250,5,1],g3:["Salt 1 kg (carton of 25)","Grocery","carton",25,480,5,25],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],r4:["Seeraga Samba Rice 25 kg","Rice 2","bag",25,1800,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],d2:["Raisins 500 g (carton of 20)","Dry Fruits","carton",10,2800,5,20],l1:["Linga Item 25 kg","Linga","bag",25,1700,5,1],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10],r5:["Rice Loose (per kg)","Rice","kg",1,52,5,1],g4:["Sugar Loose (per kg)","Grocery","kg",1,45,5,1],d3:["Cashew Loose (per kg)","Dry Fruits","kg",1,750,5,1],o3:["Sunflower Oil 1 L pouch","Oil Box","pcs",1,115,5,1]};
-let LOADS={
- "LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["AR Stores","Anna Nagar","t1",4],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Sri Murugan Traders","Simmakkal","l1",8],["Lakshmi Provisions","KK Nagar","r2",30],["Lakshmi Provisions","KK Nagar","g3",8],["Lakshmi Provisions","KK Nagar","r4",12],["Lakshmi Provisions","KK Nagar","t1",6],["Annamalai Mart","Thirunagar","g2",14],["Annamalai Mart","Thirunagar","r3",18],["Annamalai Mart","Thirunagar","o1",10],["Annamalai Mart","Thirunagar","r4",8],["Annamalai Mart","Thirunagar","l1",10],["Kumar General Stores","Pasumalai","r1",20],["Kumar General Stores","Pasumalai","g1",6],["Kumar General Stores","Pasumalai","d2",4],["AR Stores","Anna Nagar","r5",50],["Lakshmi Provisions","KK Nagar","g4",30],["Kumar General Stores","Pasumalai","d3",5],["Annamalai Mart","Thirunagar","o3",24]]},
- "LD-1041":{date:"17-Nov-2026",lines:[["AR Stores","Anna Nagar","g2",10],["AR Stores","Anna Nagar","o1",6],["Lakshmi Provisions","KK Nagar","r1",35],["Lakshmi Provisions","KK Nagar","o2",4],["Lakshmi Provisions","KK Nagar","d1",3],["Annamalai Mart","Thirunagar","r2",22]]}};
-// Delivery route: areas in the order the vehicle visits them. Edit to match your real route.
-const ROUTE=["Anna Nagar","Simmakkal","KK Nagar","Thirunagar","Pasumalai"];
-// Item order on bills: all of one category together, in this order
+/* ---------- Setup ---------- */
+// Pickup 1 = bagged rice/grocery/linga, Pickup 2 = oil and dry-fruit boxes, Pickup 3 = loose items and the rest.
+const PICKUPS=[{n:"Pickup 1",sub:"Rice, Groceries & Linga (bags)",cats:["Rice","Rice 2","Grocery","Linga"]},
+ {n:"Pickup 2",sub:"Oil Box, Oil Tin & Dry Fruit boxes",cats:["Oil Box","Oil Tin","Dry Fruits"]},
+ {n:"Pickup 3",sub:"Loose kg / pieces, Tiger and the rest"}];
+const ROUTE=["Anna Nagar","Simmakkal","KK Nagar","Thirunagar","Pasumalai"];   // delivery order of areas
 const CAT_ORDER=["Rice","Grocery","Dry Fruits","Oil Box","Oil Tin","Linga","Tiger","Rice 2"];
+const APPCATS=[...CAT_ORDER,"Other"];
+// Product: [name, category, unit, kg per unit, rate ₹, GST %, pieces per unit]
+const SAMPLE={
+ P:{r1:["Ponni Rice 25 kg","Rice","bag",25,1350,5,1],g1:["Toor Dal 30 kg","Grocery","bag",30,3300,0,1],o1:["Sunflower Oil 1 L (carton of 12)","Oil Box","carton",11,1320,5,12],o2:["Groundnut Oil 15 L tin","Oil Tin","tin",14,2400,5,1],d1:["Cashew 1 kg (carton of 10)","Dry Fruits","carton",10,7500,5,10],t1:["Tiger Item (carton of 10)","Tiger","carton",10,900,5,10],r5:["Rice Loose (per kg)","Rice","kg",1,52,5,1]},
+ LOADS:{"LD-1042":{date:"18-Nov-2026",lines:[["AR Stores","Anna Nagar","r1",40],["AR Stores","Anna Nagar","o1",12],["AR Stores","Anna Nagar","d1",5],["AR Stores","Anna Nagar","r5",50],["Sri Murugan Traders","Simmakkal","r1",25],["Sri Murugan Traders","Simmakkal","g1",10],["Sri Murugan Traders","Simmakkal","o2",6],["Lakshmi Provisions","KK Nagar","t1",6]]}}};
+
+/* ---------- Storage (this browser only, no database) ---------- */
+const $=id=>document.getElementById(id);
+const get=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const put=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const saved=get("ss_data",null);
+let P=saved?.P||SAMPLE.P, LOADS=saved?.LOADS&&Object.keys(saved.LOADS).length?saved.LOADS:SAMPLE.LOADS;
+let TA=get("ss_ta",{});                       // normalised English name -> Tamil name
+let done=get("ss_confirmed",{}), ticks=get("ss_ticks",{});
+const S={load:Object.keys(LOADS)[0],step:1,pk:0,ask:false,lang:"ta"};
+let IMP=null;
+const saveProgress=()=>{put("ss_confirmed",done);put("ss_ticks",ticks)};
+
+/* ---------- Helpers ---------- */
+const norm=s=>String(s).toLowerCase().replace(/\s+/g," ").trim();
+const lk=s=>String(s).toLowerCase().replace(/[^a-z0-9\u0b80-\u0bff]/g,"");
+const TAMIL=/[\u0b80-\u0bff]/;
+/* Tamil names Excel: one column in Tamil script, one column in English letters (Tanglish).
+   The sales sheet spells names differently from the Tanglish column, so names are matched by sound:
+   same size (26 KG, 1 L, 500 ML) + similar consonants. Names with no close match stay in English. */
+const UNIT=/(\d+(?:\.\d+)?(?:\/\d+)?)\s*(kgs?|ml|ltrs?|litres?|l|gm?)\b/g;
+const sizeOf=s=>{const o=[],t=String(s).toLowerCase();t.replace(UNIT,(m,n,u)=>{o.push(n+(u[0]==="k"?"kg":u==="ml"?"ml":u[0]==="g"?"g":"l"))});const g=t.match(/(\d+)\s*no\b/);if(g)o.push("no"+g[1]);return o.sort().join(",")};
+const phon=s=>{let t=String(s).toLowerCase().replace(UNIT," ").replace(/\b\d+\s*no\b/g," ").replace(/\b(bags?|box(es)?|tins?|pcs?|pieces?|pouch|pounch|bottle|kgs?|litre|ltr)\b/g," ").replace(/[^a-z ]/g,"");
+ [["zh","l"],["ph","p"],["ch","c"],["aa","a"],["ee","i"],["oo","u"],["th","t"],["ng","n"],["dd","d"],["kk","k"],["tt","t"],["pp","p"],["ll","l"],["nn","n"],["rr","r"],["v","w"],["y","i"]].forEach(([x,y])=>t=t.split(x).join(y));
+ return t.replace(/[aeiou ]/g,"")};
+const sim=(a,b)=>{if(!a||!b)return 0;const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return 1-d[a.length][b.length]/Math.max(a.length,b.length)};
+const PACK=/\b(bags?|box(es)?|tins?|pcs?|pieces?)\s*$/i;
+const withPack=(ta,p)=>{const m=String(p).match(PACK);return m&&PACK.test(ta)?ta.replace(PACK,m[1].toUpperCase()):ta};   // show the bill's own BAG / BOX / PIECE
+let IDX=null;
+function tindex(){
+ if(IDX&&IDX.src===TA)return IDX;
+ const exact={},list=[];
+ Object.entries(TA).forEach(([en,ta])=>{exact[lk(en)]=ta;if(TAMIL.test(ta))list.push({ta,sz:sizeOf(en),ph:phon(en)})});
+ return IDX={src:TA,exact,list,cache:{}};
+}
+function tlook(s){
+ const x=tindex();if(s in x.cache)return x.cache[s];
+ let r=x.exact[lk(s)]||"";
+ if(!r){const sz=sizeOf(s),ph=phon(s);let best=null,bs=0;
+  x.list.forEach(e=>{if(e.sz!==sz)return;const v=sim(ph,e.ph);if(v>bs){bs=v;best=e}});
+  if(best&&bs>=0.65)r=withPack(best.ta,s)}
+ return x.cache[s]=r;
+}
+const tr=s=>S.lang==="ta"?(tlook(s)||s):s;       // Tamil if a translation exists, else the English name
+const fmt=n=>n.toLocaleString("en-IN");
+const rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pl=(n,u)=>n+" "+u+(n>1?"s":"");
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+const num=v=>parseFloat(String(v).replace(/[^0-9.\-]/g,""))||0;
 const cr=c=>{const i=CAT_ORDER.indexOf(c);return i<0?99:i};
 const cmpl=(x,y)=>cr(x.cat)-cr(y.cat)||x.cat.localeCompare(y.cat)||x.name.localeCompare(y.name);
-const SAMPLE={P,LOADS};try{const sv=JSON.parse(localStorage.getItem("ss_data")||"null");if(sv&&sv.P&&sv.LOADS&&Object.keys(sv.LOADS).length){P=sv.P;LOADS=sv.LOADS}}catch(e){}
-const $=id=>document.getElementById(id),fmt=n=>n.toLocaleString("en-IN"),rs=n=>"₹"+n.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
-const pl=(n,u)=>n+" "+u+(n>1?"s":"");
-let done={};try{done=JSON.parse(localStorage.getItem("ss_confirmed")||"{}")}catch(e){}
-const S={load:Object.keys(LOADS)[0],step:1,pk:0,ticks:(()=>{try{return JSON.parse(localStorage.getItem("ss_ticks")||"{}")}catch(e){return{}}})(),ask:false};
-let translations={},language="en";
-// Translation lookup is display-only. Missing entries always remain in their original English.
-const productText=name=>language==="ta"?(translations[name]||name):name;
-const pickupText=value=>language==="ta"?(translations[value]||value):value;
-
-// Load the translation workbook from the same website folder as this HTML file.
-// Expected filename: tamil-translations.xlsx (columns: English, Tamil).
-async function loadTamilTranslations(){
- try{
-  if(!window.XLSX)throw new Error("Excel reader library is unavailable");
-  const response=await fetch("./tamil-translations.xlsx",{cache:"no-cache"});
-  if(!response.ok)throw new Error("tamil-translations.xlsx was not found (HTTP "+response.status+")");
-  const bytes=await response.arrayBuffer();
-  const workbook=XLSX.read(bytes,{type:"array"});
-  const sheet=workbook.Sheets[workbook.SheetNames[0]];
-  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:"",raw:false});
-  if(!rows.length)throw new Error("The translation workbook is empty");
-  const headers=rows[0].map(v=>String(v).trim().toLowerCase());
-  const en=headers.findIndex(v=>["english","english name","source","product","product name"].includes(v));
-  const ta=headers.findIndex(v=>["tamil","tamil name","translation","translated name"].includes(v));
-  if(en<0||ta<0)throw new Error("The workbook needs English and Tamil column headings");
-  const map={};
-  rows.slice(1).forEach(row=>{
-   const english=String(row[en]??"").trim();
-   const tamil=String(row[ta]??"").trim();
-   if(english&&tamil)map[english]=tamil;
-  });
-  translations=map;
-  const note=document.getElementById("sync");
-  if(note)note.textContent="Tamil translations loaded: "+Object.keys(map).length+" entries.";
-  if(language==="ta")render();
- }catch(error){
-  translations={};
-  const note=document.getElementById("sync");
-  if(note)note.textContent="Tamil translation file not loaded. Missing translations will remain in English. Details: "+error.message;
- }
-}
-// Saving: always on this device; also to Firebase when it is set up (see the Firebase script at the bottom).
-const CLOUD=window.CLOUD={on:false,push(){},say(t){const e=document.getElementById("sync");if(e)e.textContent=t}};
-const ls=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-const saveData=()=>{ls("ss_data",{P,LOADS});CLOUD.push("data",{P,LOADS})};
-const saveProgress=()=>{ls("ss_confirmed",done);ls("ss_ticks",S.ticks);CLOUD.push("progress",{confirmed:done,ticks:S.ticks})};
-// Called by the Firebase script when data arrives from the cloud (for example from another phone)
-window.cloudIn=(k,o)=>{
- if(k==="data"){if(!o||!o.P||!o.LOADS||!Object.keys(o.LOADS).length)return;P=o.P;LOADS=o.LOADS;ls("ss_data",{P,LOADS});if(!LOADS[S.load])S.load=Object.keys(LOADS)[0]}
- else{done=(o&&o.confirmed)||{};S.ticks=(o&&o.ticks)||{};ls("ss_confirmed",done);ls("ss_ticks",S.ticks)}
- if(S.step)render()};
-// What this device already has, used once to upload it if the cloud is still empty
-window.cloudLocal=k=>{try{if(k==="data")return JSON.parse(localStorage.getItem("ss_data")||"null");const c=JSON.parse(localStorage.getItem("ss_confirmed")||"{}"),t=JSON.parse(localStorage.getItem("ss_ticks")||"{}");return Object.keys(c).length||Object.keys(t).length?{confirmed:c,ticks:t}:null}catch(e){return null}};
-const lines=()=>LOADS[S.load].lines.map(([s,a,p,q,b],i)=>{const m=P[p],amt=q*m[4];return{i,b,shop:s,area:a,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],pcs:q*m[6],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}}).sort(cmpl);
 const words=n=>{const a=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"],b=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"],t=x=>x<20?a[x]:b[x/10|0]+(x%10?" "+a[x%10]:""),h=x=>x>99?a[x/100|0]+" Hundred"+(x%100?" "+t(x%100):""):t(x);let r="";const c=n/1e7|0,l=n/1e5%100|0,k=n/1e3%100|0,m=n%1e3;if(c)r+=h(c)+" Crore ";if(l)r+=t(l)+" Lakh ";if(k)r+=t(k)+" Thousand ";if(m)r+=h(m);return(r.trim()||"Zero")+" Rupees Only"};
-const rk=(a,s)=>{const i=ROUTE.indexOf(a.find(l=>l.shop===s).area);return i<0?99:i};
-const shopsOf=a=>[...new Set([...a].sort((x,y)=>x.i-y.i).map(l=>l.shop))].sort((x,y)=>rk(a,x)-rk(a,y));
+
+/* ---------- Data for the current loading ---------- */
+const lines=()=>LOADS[S.load].lines.map(([shop,area,p,q,b])=>{const m=P[p],amt=q*m[4];return{b,shop,area,name:m[0],cat:m[1],unit:m[2],qty:q,wt:q*m[3],rate:m[4],gst:m[5],amt,tax:amt*m[5]/100}}).sort(cmpl);
 const conf=()=>done[S.load];
-function stepper(){
- const c=!!conf(),st=[["Pick list",1,false],["Check & confirm",2,false],["Make bills",3,!c]];
- $("steps").innerHTML=st.map(([t,n,lock])=>`<button class="step ${(n===1&&c)||(n===2&&c)?"done":""}" data-n="${n}" ${lock?"disabled":""} aria-current="${S.step===n}"><b>${(n<3&&c)?"✓":n}</b><span>${t}${lock?" (confirm first)":""}</span></button>`).join("");
-}
-function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return Object.values(m)}
-// "Loose" = sold by the kg or by the piece instead of as a bag / box / tin. Loose items always go to Pickup 3.
 const loose=u=>/^(kgs?|pcs?|pieces?|nos?)$/i.test(String(u).trim());
 const inPk=(i,x)=>{const a=!loose(x.unit)&&PICKUPS[0].cats.includes(x.cat),b=!loose(x.unit)&&PICKUPS[1].cats.includes(x.cat);return i===0?a:i===1?b:!a&&!b};
-const kgOf=it=>it.reduce((a,x)=>a+x.wt,0);
-const kProd=x=>S.load+"|"+x.name;
-// One list of products per pickup (totalled over all shops). Pickups 1 and 2 follow their category order above; Pickup 3 follows the bill category order.
-const pkItems=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>i<2?PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name):cmpl(a,b));
-const pkKeys=i=>pkItems(i).map(kProd);
-function pkSum(i){const it=pkItems(i);return{n:it.length,u:"product",wt:kgOf(it)}}
-const ea=s=>String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
-function ptable(it,tk,key,groups){
- let cat="",rows="";
+function totals(){const m={};lines().forEach(l=>{const o=m[l.name]=m[l.name]||{name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});return Object.values(m)}
+const shopRank=(a,s)=>{const i=ROUTE.indexOf(a);return(i<0?99:i)};
+function pkItems(i){
+ if(i===2){const m={};lines().filter(l=>inPk(2,l)).forEach(l=>{const k=l.shop+"|"+l.name,o=m[k]=m[k]||{shop:l.shop,area:l.area,name:l.name,cat:l.cat,unit:l.unit,qty:0,wt:0};o.qty+=l.qty;o.wt+=l.wt});
+  return Object.values(m).sort((a,b)=>shopRank(a.area)-shopRank(b.area)||a.shop.localeCompare(b.shop)||cmpl(a,b))}
+ return pkItems1(i)}
+const pkItems1=i=>totals().filter(x=>inPk(i,x)).sort((a,b)=>i<2?PICKUPS[i].cats.indexOf(a.cat)-PICKUPS[i].cats.indexOf(b.cat)||a.name.localeCompare(b.name):cmpl(a,b));
+const kOf=x=>S.load+"|"+(x.shop?x.shop+"|":"")+x.name;
+const kg=it=>it.reduce((a,x)=>a+x.wt,0);
+const shopsOf=a=>{const rk=s=>{const i=ROUTE.indexOf(a.find(l=>l.shop===s).area);return i<0?99:i};return[...new Set(a.map(l=>l.shop))].sort((x,y)=>rk(x)-rk(y))};
+
+/* ---------- Views ---------- */
+function stepper(){
+ const c=!!conf();
+ $("steps").innerHTML=[["Pick list",1],["Check & confirm",2],["Make bills",3]].map(([t,n])=>`<button class="step ${n<3&&c?"done":""}" data-n="${n}" ${n===3&&!c?"disabled":""} aria-current="${S.step===n}">${n<3&&c?"✓ ":""}${t}${n===3&&!c?" (confirm first)":""}</button>`).join("");
+}
+function tabs(tk){
+ return`<div class="tabs noprint">${PICKUPS.map((p,i)=>{const it=pkItems(i),nt=it.filter(x=>ticks[kOf(x)]).length;
+  return`<button class="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${p.n}${tk&&it.length&&nt===it.length?" ✓":""}</b><span class="sub">${tk?`${nt} of ${it.length} ticked`:`${pl(it.length,"product")} · ${fmt(kg(it))} kg`}</span></button>`}).join("")}</div>`;
+}
+function pickup(i,tk,pr){
+ const p=PICKUPS[i],it=pkItems(i);let cat="",rows="";
  it.forEach(x=>{
-  if(groups&&x.cat!==cat){cat=x.cat;rows+=`<tr class="cg"><td colspan="9">${pickupText(cat)}</td></tr>`}
-  const k=key(x),on=tk&&S.ticks[k];
-  rows+=`<tr class="${tk?"t ":""}${on?"ok":""}"${tk?` data-k="${ea(k)}"`:""}>${tk?`<td class="tk"><input type="checkbox" class="ik" data-k="${ea(k)}" ${on?"checked":""} aria-label="Loaded ${ea(productText(x.name))}"></td>`:""}<td class="pn"><b>${productText(x.name)}</b></td><td class="n qb pq">${pl(x.qty,x.unit)}</td><td class="n pw">${fmt(x.wt)}</td><td class="pt">☐</td></tr>`});
- return`<div class="tw"><table><thead><tr>${tk?'<th class="ct"></th>':""}<th>${pickupText("Product")}</th><th class="n cq">${pickupText("Quantity")}</th><th class="n cw">${pickupText("Weight (kg)")}</th><th class="pth">${pickupText("Loaded")}</th></tr></thead><tbody>${rows}</tbody><tfoot><tr class="tf"><td colspan="${tk?2:1}" class="tn">${pickupText("Total")}</td><td class="tq"></td><td class="n tkg">${fmt(kgOf(it))}</td><td class="pt"></td></tr></tfoot></table></div>`}
-// o.tk = show tick boxes (step 2), o.pr = show the Print button (step 1)
-function pickup(i,o){
- const p=PICKUPS[i],s=pkSum(i),tk=!!o.tk,ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,it=pkItems(i);
- const body=it.length?`<section class="card">${ptable(it,tk,kProd,true)}</section>`:`<div class="empty">${language==="ta"?"இந்த "+pickupText(p.n)+"-இல் இந்த லோடிங்கிற்கு பொருட்கள் இல்லை.":"Nothing in "+p.n+" for this loading."}</div>`;
- const sum=`${pl(s.n,s.u)} · ${fmt(s.wt)} kg`;
- return`<div class="pk"><div class="pkb"><div><h2>${pickupText(p.n)}</h2><div class="pks">${language==="ta"?(p.n==="Pickup 1"?"அரிசி, மளிகை மற்றும் லிங்கா (மூட்டைகள்)":p.n==="Pickup 2"?"எண்ணெய் பெட்டி, எண்ணெய் டின் மற்றும் உலர் பழப் பெட்டிகள்":"கிலோ / எண்ணிக்கையில் விற்கப்படும் பொருட்கள், டைகர் மற்றும் மற்றவை"):p.sub}</div><div class="ph">${S.load} · ${LOADS[S.load].date}</div></div><div class="row"><span class="sum">${tk?`${nt} of ${ks.length} ticked · `:""}${sum}</span>${o.pr?`<button class="btn noprint" data-print="1">🖨 Print</button>`:""}</div></div>${body}</div>`}
-// Pickup buttons: one per pickup. On the Confirm step each shows how many of its items are ticked.
-function pkTabs(tk){return`<div class="tabs noprint" role="tablist" aria-label="Pickups">${PICKUPS.map((p,i)=>{const s=pkSum(i),ks=tk?pkKeys(i):[],nt=ks.filter(k=>S.ticks[k]).length,all=tk&&ks.length>0&&nt===ks.length;return`<button class="tab" role="tab" data-t="${i}" aria-selected="${S.pk===i}"><b>${pickupText(p.n)}${all?" ✓":""}</b><span>${language==="ta"?(p.n==="Pickup 1"?"அரிசி, மளிகை மற்றும் லிங்கா":p.n==="Pickup 2"?"எண்ணெய் மற்றும் உலர் பழங்கள்":"மற்ற பொருட்கள்"):p.sub}</span><em>${tk?`${nt} of ${ks.length} ticked`:`${pl(s.n,s.u)}<span class="dot"> · </span><span class="kg">${fmt(s.wt)} kg</span>`}</em></button>`}).join("")}</div>`}
-function v1(){
- const nx=`<div class="row noprint bar"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
- return pkTabs(false)+pickup(S.pk,{pr:1})+nx;
+  const grp=i===2?x.shop:x.cat;
+  if(grp!==cat){cat=grp;rows+=`<tr class="cg"><td colspan="4">${esc(i===2?x.shop+" · "+x.area:tr(cat))}</td></tr>`}
+  const k=kOf(x),on=tk&&ticks[k];
+  rows+=`<tr class="${tk?"t ":""}${on?"ok":""}" ${tk?`data-k="${esc(k)}"`:""}><td>${tk?`<input type="checkbox" class="ik" data-k="${esc(k)}" ${on?"checked":""}>`:""}</td><td><b>${esc(tr(x.name))}</b></td><td class="n"><b>${pl(x.qty,x.unit)}</b></td><td class="n">${fmt(x.wt)} kg</td></tr>`});
+ return`<div class="pkb"><div><h2>${p.n}</h2><div class="sub" style="color:#fff">${p.sub}</div></div><div class="row"><span>${pl(it.length,"product")} · ${fmt(kg(it))} kg</span></div></div>
+ ${it.length?`<section class="card"><div class="tw"><table><tbody>${rows}</tbody><tfoot><tr><td></td><td>Total</td><td></td><td class="n">${fmt(kg(it))} kg</td></tr></tfoot></table></div></section>`:`<div class="panel sub">Nothing in ${p.n} for this loading.</div>`}`;
 }
+const v1=()=>tabs(false)+pickup(S.pk,false,true)+`<div class="row bar noprint"><button class="btn p" data-go="2">${conf()?"View confirmation":"Next: Confirm loading"}</button></div>`;
 function v2(){
- const ks=PICKUPS.flatMap((_,i)=>pkKeys(i)),nt=ks.filter(k=>S.ticks[k]).length;let act;
- if(conf())act=`<div class="ban bar2"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Proceed to bill</button></div>`;
- else act=`<div class="panel bar2"><b>${nt} of ${ks.length} items ticked</b><div class="sub hm">Tick each item as it is loaded. Confirm loading unlocks when every item is ticked.</div>
- <div class="row" style="margin-top:14px"><button class="btn" data-go="1">Back to pick list</button><button class="btn p" id="ask" ${nt===ks.length?"":"disabled"}>Confirm loading</button></div>
- ${S.ask?`<div class="warn"><b>Confirm ${S.load} now?</b><div class="sub" style="margin:4px 0 10px">After this the pick list is final and bills can be made.</div><div class="row"><button class="btn p" id="yes">Yes, confirm</button><button class="btn" id="no">Cancel</button></div></div>`:""}</div>`;
- return`<h2 style="margin:6px 0 0">Check before confirming</h2><div class="sub">Tick each item as it is loaded. Use the Pickup buttons to move between pickups.</div>`+pkTabs(!conf())+pickup(S.pk,{tk:!conf()})+act;
+ const all=PICKUPS.flatMap((_,i)=>pkItems(i)),nt=all.filter(x=>ticks[kOf(x)]).length,pc=all.length?Math.round(nt/all.length*100):0,ready=all.length>0&&nt===all.length;
+ const head=conf()?`<div class="ban"><span>✓ Loading ${S.load} confirmed on ${conf()}</span><button class="btn p" data-go="3">Open bills</button></div>`
+  :`<div class="chk"><div class="chk-t"><span><b>${nt}</b> / ${all.length} items checked</span><span class="sub">${ready?"All checked – confirm the loading":"Tick every item as it is loaded"}</span></div><div class="prog"><i style="width:${pc}%"></i></div></div>`;
+ const act=conf()?"":`<div class="row bar"><button class="btn" data-go="1">Back to pick list</button><button class="btn p big" id="ask" ${ready?"":"disabled"}>✓ Confirm loading</button></div>`;
+ const modal=S.ask?`<div class="modal" id="mdl"><div class="mbox" role="dialog" aria-modal="true"><div class="mic">✓</div><h2>Confirm loading ${S.load}?</h2><p class="sub">${all.length} items checked · ${fmt(kg(all))} kg · ${LOADS[S.load].date}</p><p>After this the pick list is final and the bills will open.</p><div class="row" style="justify-content:center"><button class="btn" id="no">Cancel</button><button class="btn p" id="yes">Yes, confirm &amp; show bills</button></div></div></div>`:"";
+ return`<h2>Check loading</h2>`+head+tabs(!conf())+pickup(S.pk,!conf(),false)+act+modal;
 }
+function makeBills(){
+ const a=lines(),no=S.load.replace("LD","INV");
+ return shopsOf(a).map((sh,i)=>{const ls=a.filter(l=>l.shop===sh),sub=ls.reduce((x,l)=>x+l.amt,0),tax=ls.reduce((x,l)=>x+l.tax,0);
+  return{invoice:no+"-"+String(i+1).padStart(2,"0"),shop:sh,area:ls[0].area,refs:[...new Set(ls.map(l=>l.b).filter(Boolean))].join(", ")||"–",weight:ls.reduce((x,l)=>x+l.wt,0),subtotal:sub,tax,total:Math.round(sub+tax),
+   items:ls.map(l=>({name:l.name,qty:l.qty,unit:l.unit,rate:l.rate,gst:l.gst,amount:l.amt}))}});
+}
+function billHtml(b,i,date,load){
+ return`<section class="card bill"><div class="inv-h"><div><h2>Sales Support</h2><div class="sub">Tax Invoice</div></div><div class="n"><b>Invoice No: ${b.invoice}</b><div class="sub">Date: ${date} · Loading: ${load}</div></div></div>
+ <div class="row" style="justify-content:space-between;margin-bottom:12px"><div><span class="sub">BILL TO</span><br><b>${esc(b.shop)}</b><div class="sub">${esc(b.area)}</div></div><div class="sub">Items: ${b.items.length}<br>Ref bill: ${esc(b.refs)}<br>Weight: ${fmt(b.weight)} kg</div></div>
+ <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th class="n">Qty</th><th class="n">Rate</th><th class="n">GST</th><th class="n">Amount</th></tr></thead><tbody>${b.items.map((l,j)=>`<tr><td>${j+1}</td><td>${esc(tr(l.name))}</td><td class="n">${pl(l.qty,l.unit)}</td><td class="n">${rs(l.rate)}</td><td class="n">${l.gst}%</td><td class="n"><b>${rs(l.amount)}</b></td></tr>`).join("")}</tbody></table></div>
+ <div class="inv-f"><div class="wd"><span class="sub">AMOUNT IN WORDS</span><br><b>${words(b.total)}</b><div class="sub" style="margin-top:10px">Goods once sold will not be taken back.</div></div>
+ <div class="tot"><div><span>Subtotal</span><span>${rs(b.subtotal)}</span></div><div><span>CGST</span><span>${rs(b.tax/2)}</span></div><div><span>SGST</span><span>${rs(b.tax/2)}</span></div><div><span>Round off</span><span>${rs(b.total-b.subtotal-b.tax)}</span></div><div class="g"><span>Total</span><span>${rs(b.total)}</span></div></div></div>
+ <div class="sig"><span>Customer signature</span><span>For Sales Support<br>Authorised signatory</span></div>
+ <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}
 function v3(){
- const a=lines(),shops=shopsOf(a),no=S.load.replace("LD","INV");let gt=0;
- const bills=shops.map((s,i)=>{const ls=a.filter(l=>l.shop===s),sub=ls.reduce((x,l)=>x+l.amt,0),tax=ls.reduce((x,l)=>x+l.tax,0),tot=Math.round(sub+tax);gt+=tot;
- return`<section class="card bill" data-b="${i}"><div class="inv-h"><div><h2>Sales Support</h2><div class="sub">Tax Invoice</div></div><div class="n"><b>Invoice No: ${no}-${String(i+1).padStart(2,"0")}</b><div class="sub">Date: ${LOADS[S.load].date}</div><div class="sub">Loading: ${S.load}</div></div></div><div class="inv-m"><div><span class="lbl">Bill to</span><br><b>${s}</b><div class="sub">${ls[0].area}</div></div><div><span class="lbl">Details</span><div class="sub">Items: ${ls.length}</div><div class="sub">Ref bill: ${[...new Set(ls.map(l=>l.b).filter(Boolean))].join(", ")||"–"}</div><div class="sub">Total weight: ${fmt(ls.reduce((x,l)=>x+l.wt,0))} kg</div></div></div>
- <div class="tw"><table><thead><tr><th>#</th><th>Product</th><th class="n">Qty</th><th class="n">Rate (₹)</th><th class="n">GST</th><th class="n">Amount (₹)</th></tr></thead><tbody>${ls.map((l,j)=>`<tr><td class="bi">${j+1}</td><td class="bn">${l.name}<span class="bm">${pl(l.qty,l.unit)} × ${rs(l.rate)} · GST ${l.gst}%</span></td><td class="n bq">${pl(l.qty,l.unit)}</td><td class="n br">${rs(l.rate)}</td><td class="n bgst">${l.gst}%</td><td class="n ba">${rs(l.amt)}</td></tr>`).join("")}</tbody></table></div>
- 
- <div class="inv-f"><div class="wd"><span class="lbl">Amount in words</span><br><b>${words(tot)}</b><div class="sub" style="margin-top:12px">Goods once sold will not be taken back.</div></div><div class="tot"><div><span>Subtotal</span><span>${rs(sub)}</span></div><div><span>CGST</span><span>${rs(tax/2)}</span></div><div><span>SGST</span><span>${rs(tax/2)}</span></div><div><span>Round off</span><span>${rs(tot-sub-tax)}</span></div><div class="g"><span>Total</span><span>${rs(tot)}</span></div></div></div><div class="sig"><span>Customer signature</span><span>For Sales Support<br>Authorised signatory</span></div>
- <div class="row noprint" style="margin-top:12px"><button class="btn" data-pr="${i}">Print this bill</button></div></section>`}).join("");
- return`<div class="stats noprint"><div class="stat"><b>${shops.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div><div class="row noprint" style="justify-content:flex-end"><button class="btn p" data-pr="all">Print all bills</button></div><div id="bills">${bills}</div>`;
+ const bs=makeBills(),gt=bs.reduce((x,b)=>x+b.total,0);
+ return`<div class="stats noprint"><div class="stat"><b>${bs.length}</b><span class="sub">Bills</span></div><div class="stat"><b>${rs(gt)}</b><span class="sub">Grand total</span></div></div>
+ <div class="row noprint bar"><span class="sub" style="margin-right:auto">${CLOUD.status}</span><button class="btn" id="resave">☁ Save bills</button><button class="btn p" data-pr="all">Print all bills</button></div>${bs.map((b,i)=>billHtml(b,i,LOADS[S.load].date,S.load)).join("")}`;
 }
+
+/* ---------- Cloud: bills only (Firebase Firestore, one document per loading) ---------- */
+window.FIREBASE_CONFIG={apiKey:"AIzaSyA-SZshtep-V-18FpibD0lXikkl9hkllio",authDomain:"student-d6b22.firebaseapp.com",projectId:"student-d6b22",appId:"1:216169741429:web:bfe9958aedcf2960d4cc3c"};
+const CLOUD={F:null,db:null,status:""};
+const COL="salesSupportBills";
+async function cloud(){
+ if(CLOUD.db)return CLOUD;
+ const B="https://www.gstatic.com/firebasejs/12.4.0/",[A,F]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-firestore.js")]);
+ CLOUD.F=F;CLOUD.db=F.getFirestore(A.initializeApp(window.FIREBASE_CONFIG));return CLOUD;
+}
+const cerr=e=>e.code==="permission-denied"?"⚠ Firestore rules do not allow read/write on "+COL+" and salesSupportSettings":"⚠ Cloud error: "+(e.code||e.message);
+async function saveBills(){
+ CLOUD.status="☁ Saving…";if(S.step===3)render();
+ try{const c=await cloud(),bs=makeBills();
+  await c.F.setDoc(c.F.doc(c.db,COL,S.load.replace(/\//g,"-")),{loading:S.load,date:LOADS[S.load].date,savedAt:Date.now(),billCount:bs.length,grandTotal:bs.reduce((x,b)=>x+b.total,0),bills:bs});
+  CLOUD.status="☁ Saved "+bs.length+" bills for "+S.load}
+ catch(e){CLOUD.status=cerr(e)}
+ if(S.step===3)render();
+}
+/* Saved bills page: a box for each loading, open one to see its bills */
+async function loadTamil(){
+ try{const c=await cloud(),d=await c.F.getDoc(c.F.doc(c.db,"salesSupportSettings","tamil"));
+  if(d.exists()){TA=JSON.parse(d.data().json);put("ss_ta",TA);render()}}catch(e){}
+}
+const SV={list:null,open:null,err:""};
+async function openSaved(){
+ SV.open=null;SV.err="";go(9);
+ try{const c=await cloud(),snap=await c.F.getDocs(c.F.collection(c.db,COL));SV.list=snap.docs.map(d=>d.data()).sort((a,b)=>b.savedAt-a.savedAt)}
+ catch(e){SV.err=cerr(e);SV.list=[]}
+ if(S.step===9)render();
+}
+function vs(){
+ if(SV.err)return`<div class="warn">${SV.err}</div>`;
+ if(!SV.list)return`<div class="panel sub">Loading saved bills…</div>`;
+ const o=SV.open&&SV.list.find(x=>x.loading===SV.open);
+ if(o)return`<div class="row noprint"><button class="btn" id="svback">← All loadings</button><h2>${esc(o.loading)} · ${esc(o.date)}</h2><button class="btn p" data-pr="all" style="margin-left:auto">Print all bills</button></div>${o.bills.map((b,i)=>billHtml(b,i,o.date,o.loading)).join("")}`;
+ if(!SV.list.length)return`<div class="panel sub">No bills saved yet. Open a confirmed loading and go to Make bills.</div>`;
+ return`<h2>Saved bills</h2><div class="sub">One box for each loading. Tap a box to see its bills.</div><div class="grid" style="padding:12px 0">${SV.list.map(x=>`<button class="tab" data-open="${esc(x.loading)}"><b>${esc(x.date)}</b><span class="sub">${esc(x.loading)}<br>${x.billCount} bills · ${rs(x.grandTotal)}</span></button>`).join("")}</div>`;
+}
+
+/* ---------- Excel reading ---------- */
+function readSheet(file,cb,fail,all){
+ if(!window.XLSX)return fail("The Excel reader could not load. Check your internet connection and reload.");
+ const r=new FileReader();
+ r.onload=()=>{try{const wb=XLSX.read(r.result,{type:"array"});cb((all?wb.SheetNames:[wb.SheetNames[0]]).flatMap(n=>XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:false})))}catch(e){fail("Could not read this file. Use .xlsx, .xls or .csv.")}};
+ r.readAsArrayBuffer(file);
+}
+// Tamil translations: first sheet, columns "English" and "Tamil" (or the first two columns)
+function importTamil(file){
+ readSheet(file,rows=>{
+  const cnt=c=>rows.filter(r=>TAMIL.test(String(r[c]??""))).length,t=cnt(0)>=cnt(1)?0:1,e=1-t;
+  if(!cnt(0)&&!cnt(1))return IMPMSG("No Tamil text found. Use one column with Tamil names and one column with English / Tanglish names.");
+  const m={};let n=0;
+  rows.forEach(r=>{const en=String(r[e]??"").trim(),ta=String(r[t]??"").trim();if(en&&ta&&TAMIL.test(ta)){m[en]=ta;n++}});
+  TA=m;put("ss_ta",TA);IMPMSG(`✓ ${n} Tamil names read. Saving for everyone…`,true);
+  cloud().then(c=>c.F.setDoc(c.F.doc(c.db,"salesSupportSettings","tamil"),{json:JSON.stringify(m),count:n,savedAt:Date.now()}))
+   .then(()=>IMPMSG(`✓ ${n} Tamil names saved for all devices.`,true))
+   .catch(err=>IMPMSG("⚠ Saved on this device only. "+cerr(err)));
+ },IMPMSG,true);
+}
+function IMPMSG(t,ok){IMP=Object.assign(IMP||{},{tmsg:t,tok:!!ok});render()}
+// Orders / loadings
+const FIELDS=[["load","Loading no."],["date","Date"],["shop","Shop name *"],["area","Area / route"],["prod","Product name *"],["cat","Category"],["unit","Unit (bag / carton / tin)"],["qty","Quantity *"],["kg","Kg per unit"],["rate","Rate per unit (₹)"],["gst","GST %"],["pcs","Pieces per unit"],["bill","Bill no. (optional)"],["amt","Amount incl. tax (₹)"],["tax","Tax amount (₹)"]];
+const KEYS={load:["load"],date:["date"],shop:["shop","party"],area:["area","route"],prod:["description","item name"],cat:["category"],unit:["uom"],qty:["qty","quantity"],kg:["kg per","weight"],rate:["rate","price"],gst:["gst"],pcs:["pieces per","pcs per"],bill:["bill no","invoice"],amt:["amount"],tax:["tax"]};
+const EX={load:["loadno","loading","loadingno"],date:["billdate","date"],shop:["customername","shopname","shop","customer"],area:["areaname","area","route"],prod:["description","productname","itemname"],cat:["producttype","category"],unit:["unit","uom"],qty:["pcs","qty","quantity"],kg:["kgperunit"],rate:["itemrate","rate"],gst:["gst","gstpercent"],pcs:["piecesperunit"],bill:["billno","invoiceno"],amt:["amount"],tax:["totaltaxamount","taxamount"]};
+const guessCat=r=>{const s=r.toLowerCase();return/rice/.test(s)?(/2/.test(s)?"Rice 2":"Rice"):/oil tin/.test(s)?"Oil Tin":/oil/.test(s)?"Oil Box":/dry/.test(s)?"Dry Fruits":/grocer/.test(s)?"Grocery":/linga/.test(s)?"Linga":/tiger/.test(s)?"Tiger":"Other"};
+// Unit, kg and pieces from the product name when the file does not have them
+const derive=d=>{const D=d.toUpperCase(),w=D.trim().split(/\s+/).pop(),k=(D.match(/(\d+(?:\.\d+)?)\s*KG/)||[])[1];
+ if(w==="KG")return["kg",1,1];if(w==="BAG")return["bag",+k||0,1];if(w==="TIN")return["tin",14,1];if(w==="BOX")return["box",10,10];return["pcs",1,1]};
+function importOrders(file){
+ readSheet(file,d=>{
+  const hi=d.slice(0,15).reduce((b,r,i)=>{const c=r.filter(x=>String(x).trim()).length;return c>b[0]?[c,i]:b},[0,0])[1];
+  const hd=d[hi].map(x=>String(x).trim()),map={},used=new Set(),hn=hd.map(h=>h.toLowerCase().replace(/[^a-z0-9]/g,""));
+  ["qty","kg","rate","gst","pcs","shop","area","prod","cat","unit","load","date","bill","amt","tax"].forEach(k=>{
+   let i=-1;for(const w of EX[k]){i=hn.findIndex((h,j)=>h===w&&!used.has(j));if(i>=0)break}
+   if(i<0)i=hd.findIndex((h,j)=>h&&!used.has(j)&&KEYS[k].some(w=>h.toLowerCase().includes(w)));
+   if(i>=0)used.add(i);map[k]=i<0?"":String(i)});
+  IMP=Object.assign(IMP||{},{name:file.name,hd,rows:d.slice(hi+1).filter(x=>x.some(c=>String(c).trim())),map,cm:{},err:null});render();
+ },m=>{IMP=Object.assign(IMP||{},{err:m});render()});
+}
+function doImport(){
+ const m=IMP.map,P2={},nl={},key={},old=n=>P[Object.keys(P).find(k=>P[k][0].toLowerCase()===n.toLowerCase())];
+ IMP.rows.forEach(r=>{
+  const g=f=>m[f]===""?"":String(r[+m[f]]??"").trim(),shop=g("shop"),prod=g("prod"),qty=num(g("qty"));
+  if(!shop||!prod||!qty)return;
+  const o=old(prod),dv=derive(prod),raw=g("cat"),cat=raw?(IMP.cm[raw]||guessCat(raw)):(o?o[1]:"Other");
+  let rate,gst;
+  if(m.amt!==""&&m.tax!==""){const a=num(g("amt")),t=num(g("tax")),b=a-t;rate=+(b/qty).toFixed(2);gst=t>0&&b>0?Math.round(t/b*100):0}
+  else{rate=g("rate")!==""?num(g("rate")):(o?o[4]:0);gst=g("gst")!==""?num(g("gst")):(o?o[5]:0)}
+  const unit=g("unit")||(o?o[2]:dv[0]),kgu=g("kg")!==""?num(g("kg")):(o?o[3]:dv[1]),pcs=g("pcs")!==""?num(g("pcs")):(o?o[6]:dv[2]),k=[prod,cat,unit,kgu,rate,gst,pcs].join("|");
+  if(!key[k]){key[k]="p"+Object.keys(P2).length;P2[key[k]]=[prod,cat,unit,kgu,rate,gst,pcs]}
+  const dt=g("date")||new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}).replace(/ /g,"-"),ld=g("load")||"LD-"+dt;
+  (nl[ld]=nl[ld]||{date:dt,lines:[]}).lines.push([shop,g("area"),key[k],qty,g("bill")]);
+ });
+ if(!Object.keys(nl).length){IMP.err="No usable rows. Shop, Product and Quantity must be filled in the columns you chose.";return render()}
+ P=P2;LOADS=nl;put("ss_data",{P,LOADS});
+ Object.keys(nl).forEach(k=>{delete done[k];Object.keys(ticks).forEach(t=>{if(t.startsWith(k+"|"))delete ticks[t]})});
+ saveProgress();Object.assign(S,{load:Object.keys(LOADS)[0],pk:0});IMP=null;go(1);
+}
+function clearData(){localStorage.removeItem("ss_data");P=SAMPLE.P;LOADS=SAMPLE.LOADS;S.load=Object.keys(LOADS)[0];IMP=null;render()}
+function clearTamil(){localStorage.removeItem("ss_ta");TA={};IMP=null;render()}
+
+/* ---------- Import page ---------- */
+function vi(){
+ const nTa=Object.keys(TA).length,names=[...new Set(Object.values(P).map(p=>p[0]))],miss=names.filter(n=>!tlook(n));
+ let h=`<section class="card"><div class="ch"><h2>1. Import loadings from Excel</h2><div class="sub">Choose your file, check the columns, then import. Column names must be in the first row.</div></div><div style="padding:16px"><input type="file" id="fl" accept=".xlsx,.xls,.csv" style="width:100%"></div></section>`;
+ if(IMP?.err)h+=`<div class="warn">${IMP.err}</div>`;
+ if(IMP?.hd){
+  const opt=k=>`<option value="">— not in my file —</option>`+IMP.hd.map((x,i)=>x?`<option value="${i}" ${IMP.map[k]===String(i)?"selected":""}>${esc(x)}</option>`:"").join(""),ok=["shop","prod","qty"].every(k=>IMP.map[k]!=="");
+  const cats=IMP.map.cat?[...new Set(IMP.rows.map(r=>String(r[+IMP.map.cat]??"").trim()).filter(Boolean))]:[];
+  h+=`<section class="card"><div class="ch"><b>Choose columns</b> <span class="sub">${esc(IMP.name)} · ${IMP.rows.length} rows · * required</span></div><div class="grid">${FIELDS.map(([k,t])=>`<label class="fl">${t}<select class="mp" data-f="${k}">${opt(k)}</select></label>`).join("")}</div>
+  ${cats.length?`<div class="grid" style="padding-top:0">${cats.map(x=>`<label class="fl">Category: ${esc(x)}<select class="cm" data-r="${encodeURIComponent(x)}">${APPCATS.map(c=>`<option ${(IMP.cm[x]||guessCat(x))===c?"selected":""}>${c}</option>`).join("")}</select></label>`).join("")}</div>`:""}
+  <div class="row" style="padding:0 16px 16px"><button class="btn p" id="go-imp" ${ok?"":"disabled"}>Import</button>${ok?"":`<span class="sub">Choose Shop, Product and Quantity first.</span>`}</div></section>`}
+ h+=`<section class="card"><div class="ch"><h2>2. Admin: upload Tamil names (Excel)</h2><div class="sub">Sheet with English names in column A and Tamil names in column B (headings "English" and "Tamil"). Product names on the pick list and bills then show in Tamil when you press தமிழ். Names without a match stay in English.</div></div><div style="padding:16px"><input type="file" id="tfl" accept=".xlsx,.xls,.csv" style="width:100%">
+  ${IMP?.tmsg?`<div class="${IMP.tok?"ban":"warn"}">${IMP.tmsg}</div>`:""}
+  <div class="sub" style="margin-top:10px"><b>Check:</b> first rows read (English → Tamil): ${nTa?Object.entries(TA).slice(0,3).map(([k,v])=>esc(k)+" → "+esc(v)).join(" · "):"none yet"}</div>
+  <div class="tw" style="max-height:260px;margin-top:8px"><table><thead><tr><th>Product in loading</th><th>Tamil shown</th></tr></thead><tbody>${names.map(n=>`<tr><td>${esc(n)}</td><td>${tlook(n)?esc(tlook(n)):'<span style="color:#b00020">no match</span>'}</td></tr>`).join("")}</tbody></table></div>
+  <div class="sub" style="margin-top:10px">${nTa?`${nTa} translations saved. `:"No translations saved yet. "}${nTa&&miss.length?`Not translated in the current data (${miss.length}): ${miss.slice(0,12).map(esc).join(", ")}${miss.length>12?"…":""}`:""}${nTa&&!miss.length?"All current products are translated.":""}</div></div></section>
+ <div class="panel row" style="justify-content:space-between"><span class="sub">${localStorage.getItem("ss_data")?"Showing imported data saved in this browser.":"Showing sample data."}</span><span class="row">${localStorage.getItem("ss_data")?`<button class="btn" id="clr">Clear loadings</button>`:""}${nTa?`<button class="btn" id="clrta">Clear Tamil names</button>`:""}<button class="btn" data-go="1">Back to pick list</button></span></div>`;
+ return h;
+}
+
+/* ---------- Rendering and events ---------- */
 function render(){
  $("meta").textContent=`${S.load} · ${LOADS[S.load].date} · ${conf()?"Confirmed":"Not confirmed"}`;
- opts();stepper();$("view").innerHTML=(S.step?[v1,v2,v3][S.step-1]:vi)();
+ $("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}" ${k===S.load?"selected":""}>${k} · ${v.date} · ${done[k]?"✔ Confirmed":"Not confirmed"}</option>`).join("");
+ $("lang").textContent=S.lang==="en"?"தமிழ்":"English";
+ stepper();$("view").innerHTML=(S.step===0?vi:S.step===9?vs:[v1,v2,v3][S.step-1])();
 }
-const FIELDS=[["load","Loading no."],["date","Date"],["shop","Shop name *"],["area","Area / route"],["prod","Product name *"],["cat","Category"],["unit","Unit (bag / carton / tin)"],["qty","Quantity *"],["kg","Kg per unit"],["rate","Rate per unit (₹)"],["gst","GST %"],["pcs","Pieces per unit"],["bill","Bill no. (optional)"],["amt","Amount incl. tax (₹)"],["tax","Tax amount (₹)"]];
-const KEYS={load:["load"],date:["date"],shop:["shop","party"],area:["area","route"],prod:["description","item name"],cat:["category"],unit:["uom"],qty:["qty","quantity"],kg:["kg per","weight"],rate:["rate","price"],gst:["gst%","gst %"],pcs:["pieces per","pcs per"],bill:["bill no","invoice"],amt:["amount"],tax:["tax"]};
-const EX={load:["loadno","loading","loadingno"],date:["billdate","date"],shop:["customername","shopname","shop","customer"],area:["areaname","area","route"],prod:["description","productname","itemname"],cat:["producttype","category"],unit:["unit","uom"],qty:["pcs","qty","quantity"],kg:["kgperunit"],rate:["itemrate","rate"],gst:["gst","gstpercent"],pcs:["piecesperunit"],bill:["billno","invoiceno"],amt:["amount"],tax:["totaltaxamount","taxamount"]};
-const APPCATS=["Rice","Rice 2","Grocery","Linga","Oil Box","Oil Tin","Dry Fruits","Tiger","Other"];
-const guessCat=r=>{const s=r.toLowerCase().replace(/^[a-z]\s*\.\s*/,"");return/rice/.test(s)?(/2/.test(s)?"Rice 2":"Rice"):/oil tin/.test(s)?"Oil Tin":/oil/.test(s)?"Oil Box":/dry/.test(s)?"Dry Fruits":/grocer/.test(s)?"Grocery":/linga/.test(s)?"Linga":/tiger/.test(s)?"Tiger":"Other"};
-// Works out unit, kg per unit and pieces per unit from the product name (last word BAG/BOX/TIN/KG/PIECE, "26 KG", "1/2 L", "500 ML")
-const derive=d=>{const D=d.toUpperCase(),w=D.trim().split(/\s+/).pop(),kg=(D.match(/(\d+(?:\.\d+)?)\s*KG/)||[])[1],ml=D.match(/(\d+)\s*ML/),lm=D.match(/(\d+(?:\.\d+)?)(?:\/(\d+))?\s*(?:L\b|LITRE|LTR)/);let l=ml?ml[1]/1000:lm?(lm[2]?lm[1]/lm[2]:+lm[1]):0;
- if(w==="KG")return["kg",1,1];if(w==="BAG")return["bag",+kg||0,1];if(w==="TIN")return["tin",14,1];if(w==="BOX")return["box",10*(l||1),10];return["pcs",l||1,1]};
-let IMP=null;
-const num=v=>parseFloat(String(v).replace(/[^0-9.\-]/g,""))||0;
-function readFile(f){
- if(!window.XLSX){IMP={err:"The Excel reader could not load. Check your internet and reload the page."};render();return}
- const r=new FileReader();r.onload=()=>{try{const wb=XLSX.read(r.result,{type:"array"}),ws=wb.Sheets[wb.SheetNames[0]],d=XLSX.utils.sheet_to_json(ws,{header:1,defval:"",raw:false}),hi=d.slice(0,15).reduce((b,r,i)=>{const c=r.filter(x=>String(x).trim()).length;return c>b[0]?[c,i]:b},[0,0])[1],hd=d[hi].map(x=>String(x).trim()),map={},used=new Set();
-  ["qty","kg","rate","gst","pcs","shop","area","prod","cat","unit","load","date","bill","amt","tax"].forEach(k=>{const hn=hd.map(h=>h.toLowerCase().replace(/[^a-z0-9]/g,""));let i=-1;for(const w of EX[k]){i=hn.findIndex((h,j)=>h===w&&!used.has(j));if(i>=0)break}if(i<0)i=hd.findIndex((h,j)=>h&&!used.has(j)&&KEYS[k].some(w=>h.toLowerCase().includes(w)));if(i>=0)used.add(i);map[k]=i<0?"":String(i)});
-  IMP={name:f.name,hd,rows:d.slice(hi+1).filter(x=>x.some(c=>String(c).trim())),map,cm:{}}}catch(e){IMP={err:"Could not read this file. Use .xlsx, .xls or .csv with column names in the first row."}}render()};r.readAsArrayBuffer(f)}
-function doImport(){
- const m=IMP.map,P2={},nl={},key={},oldP=n=>P[Object.keys(P).find(k=>P[k][0].toLowerCase()===n.toLowerCase())];
- IMP.rows.forEach(r=>{const g=f=>m[f]===""?"":String(r[+m[f]]??"").trim(),shop=g("shop"),prod=g("prod"),qty=num(g("qty"));if(!shop||!prod||!qty)return;
-  const o=oldP(prod),dv=derive(prod),raw=g("cat"),cat=raw?(IMP.cm[raw]||guessCat(raw)):(o?o[1]:"Other");
-  let rate,gst;if(m.amt!==""&&m.tax!==""){const a=num(g("amt")),t=num(g("tax")),b=a-t;rate=+(b/qty).toFixed(2);gst=t>0&&b>0?Math.round(t/b*100):0}else{rate=g("rate")!==""?num(g("rate")):(o?o[4]:0);gst=g("gst")!==""?num(g("gst")):(o?o[5]:0)}
-  const unit=g("unit")||(o?o[2]:dv[0]),kg=g("kg")!==""?num(g("kg")):(o?o[3]:dv[1]),pcs=g("pcs")!==""?num(g("pcs")):(o?o[6]:dv[2]),k=[prod,cat,unit,kg,rate,gst,pcs].join("|");
-  if(!key[k]){key[k]="p"+Object.keys(P2).length;P2[key[k]]=[prod,cat,unit,kg,rate,gst,pcs]}
-  const dt=g("date")||new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"}).replace(/ /g,"-"),ld=g("load")||"LD-"+dt;
-  (nl[ld]=nl[ld]||{date:dt,lines:[]}).lines.push([shop,g("area"),key[k],qty,g("bill")])});
- if(!Object.keys(nl).length){IMP.err="No usable rows. Shop, Product and Quantity must be filled in the columns you chose.";render();return}
- P=P2;LOADS=nl;saveData();
- Object.keys(nl).forEach(k=>{delete done[k];Object.keys(S.ticks).forEach(t=>{if(t.startsWith(k+"|"))delete S.ticks[t]})});
- saveProgress();
- Object.assign(S,{load:Object.keys(LOADS)[0],pk:0});IMP=null;go(1)}
-function catui(){if(!IMP.map.cat)return"";const u=[...new Set(IMP.rows.map(r=>String(r[+IMP.map.cat]??"").trim()).filter(Boolean))];return`<div style="padding:0 16px 12px"><b>Match categories</b><div class="sub">Choose which pickup category each value in your Excel belongs to.</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:8px">${u.map(x=>`<label class="fl">${x}<select class="cm" data-r="${encodeURIComponent(x)}">${APPCATS.map(c=>`<option ${(IMP.cm[x]||guessCat(x))===c?"selected":""}>${c}</option>`).join("")}</select></label>`).join("")}</div></div>`}
-function clearData(){try{localStorage.removeItem("ss_data")}catch(e){}CLOUD.push("data",null);P=SAMPLE.P;LOADS=SAMPLE.LOADS;Object.assign(S,{load:Object.keys(LOADS)[0]});IMP=null;render()}
-function vi(){
- const has=localStorage.getItem("ss_data");
- let h=`<section class="card"><div class="ch"><div><h2>Import from Excel</h2><span class="sub">1. Choose your file · 2. Pick the exact column for each field · 3. Import</span></div></div><div style="padding:16px"><input type="file" id="fl" accept=".xlsx,.xls,.csv" class="in" style="height:auto;padding:10px;width:100%"><div class="sub" style="margin-top:8px">Column names must be in the first row of the first sheet. Data is saved ${CLOUD.on?"to the cloud and on this device":"in this browser"}.</div></div></section>`;
- if(IMP&&IMP.err)h+=`<div class="warn">${IMP.err}</div>`;
- if(IMP&&IMP.hd){const opt=k=>`<option value="">— not in my file —</option>`+IMP.hd.map((x,i)=>x?`<option value="${i}" ${IMP.map[k]===String(i)?"selected":""}>${x}</option>`:"").join(""),ok=["shop","prod","qty"].every(k=>IMP.map[k]!=="");
-  h+=`<section class="card"><div class="ch"><div><h2>Choose columns</h2><span class="sub">${IMP.name} · ${IMP.rows.length} rows · * is required</span></div></div><div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">${FIELDS.map(([k,t])=>`<label class="fl">${t}<select class="mp" data-f="${k}">${opt(k)}</select></label>`).join("")}</div>${catui()}<div class="sub" style="padding:0 16px 12px">Unit, kg per unit and pieces are worked out from the product name (BAG, BOX, TIN, KG, litres) when they are not in your file; an oil tin is assumed to be 14 kg and an oil box 10 pieces. If Amount and Tax are both chosen, rate and GST are worked out from them so bill totals match your sheet.</div><div class="row" style="padding:0 16px 16px"><button class="btn p" id="go-imp" ${ok?"":"disabled"}>Import and save</button>${ok?"":`<span class="sub">Choose the Shop, Product and Quantity columns first.</span>`}</div></section>`}
- h+=`<div class="panel row" style="justify-content:space-between"><span class="sub">${has?"Showing imported data saved in this browser.":"Showing sample data."}</span>${has?`<button class="btn" id="clr">Clear saved data</button>`:""}</div>`;
- return h}
-function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0)}
+function go(n){S.step=n;S.ask=false;render();window.scrollTo(0,0);if(n===3)saveBills()}
 $("imp").onclick=()=>go(0);
-$("langToggle").onclick=()=>{language=language==="en"?"ta":"en";$("langToggle").textContent=language==="en"?"தமிழ்":"English";render()};
-$("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
-$("view").onclick=e=>{const r=e.target.closest("tr.t");if(r&&r.dataset.k&&!e.target.closest("button")){if(!e.target.closest(".ik")){S.ticks[r.dataset.k]=!S.ticks[r.dataset.k];saveProgress();render()}return}const b=e.target.closest("button");if(!b)return;const d=b.dataset;
- if(b.id==="go-imp")doImport();else if(b.id==="clr")clearData();else if(d.go)go(+d.go);else if(d.t){S.pk=+d.t;render();const bn=document.querySelector(".pkb");if(bn&&bn.getBoundingClientRect().top<0)bn.scrollIntoView({block:"start"})}else if(d.print)window.print();
- else if(b.id==="ask"){S.ask=true;render()}else if(b.id==="no"){S.ask=false;render()}
- else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});saveProgress();S.ask=false;render()}
- else if(d.pr){const bs=document.querySelectorAll(".bill");document.body.classList.add("pb");bs.forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print()}};
-$("view").onchange=e=>{const t=e.target;if(t.id==="fl"&&t.files[0])readFile(t.files[0]);if(t.classList.contains("mp")){IMP.map[t.dataset.f]=t.value;render()}if(t.classList.contains("cm")){IMP.cm[decodeURIComponent(t.dataset.r)]=t.value}if(t.classList.contains("ik")){S.ticks[t.dataset.k]=t.checked;saveProgress();render()}};
-function opts(){$("load").innerHTML=Object.entries(LOADS).map(([k,v])=>`<option value="${k}" ${k===S.load?"selected":""}>${k} · ${v.date} · ${done[k]?"✔ Confirmed":"Not confirmed"}</option>`).join("")}
+$("sv").onclick=openSaved;
+$("lang").onclick=()=>{S.lang=S.lang==="en"?"ta":"en";render()};
 $("load").onchange=e=>{Object.assign(S,{load:e.target.value,step:1,pk:0,ask:false});render()};
-CLOUD.say("Saved on this device only. Use Import Excel to load your own sheet.");render();loadTamilTranslations();
-</script>
-<script>
-// Firebase backend (Firestore only, no sign-in). Does nothing until FIREBASE_CONFIG at the top of this file is filled in.
-// Your Firestore rules must allow read and write on salesSupport/{doc}.
-(async()=>{
- const C=window.FIREBASE_CONFIG||{},CLOUD=window.CLOUD,$=id=>document.getElementById(id);
- if(!C.apiKey||!C.projectId||/^YOUR_/.test(C.apiKey))return;
- const B="https://www.gstatic.com/firebasejs/12.4.0/";
- let App,FS;
- try{[App,FS]=await Promise.all([import(B+"firebase-app.js"),import(B+"firebase-firestore.js")])}
- catch(e){console.error(e);CLOUD.say("⚠ Cloud sync could not start (no internet?). Saved on this device only.");return}
- const app=App.initializeApp(C);
- const db=FS.initializeFirestore(app,{localCache:FS.persistentLocalCache({tabManager:FS.persistentMultipleTabManager()})});
- const ref=k=>FS.doc(db,"salesSupport",k);
- const say=t=>{$("sync").textContent=t};
- CLOUD.on=true;
- // Each document holds one JSON string (Firestore does not allow arrays inside arrays)
- CLOUD.push=(k,o)=>{
-  (o===null?FS.deleteDoc(ref(k)):FS.setDoc(ref(k),{json:JSON.stringify(o),updatedAt:FS.serverTimestamp()})).catch(e=>say("⚠ Could not save to the cloud: "+e.code))};
- say("☁ Connecting to the cloud…");
- const first={};
- ["data","progress"].forEach(k=>FS.onSnapshot(ref(k),s=>{
-  if(s.metadata.hasPendingWrites)return;
-  if(!s.metadata.fromCache)say("☁ Saved to the cloud");
-  if(s.exists()){try{window.cloudIn(k,JSON.parse(s.data().json))}catch(x){console.error(x)}}
-  else if(!first[k]){const o=window.cloudLocal(k);if(o)CLOUD.push(k,o)}
-  first[k]=1;
- },e=>say(e.code==="permission-denied"?"⚠ Cloud blocked: your Firestore rules do not allow read and write on salesSupport. Saved on this device only.":(e.code==="not-found"||e.code==="unavailable")?"⚠ Cannot reach the Firestore database for project "+C.projectId+". Check that it has been created in the Firebase console. Saved on this device only.":"⚠ Cloud error: "+e.code+". Saved on this device only.")));
-})();
+$("steps").onclick=e=>{const b=e.target.closest("button");if(b&&!b.disabled)go(+b.dataset.n)};
+$("view").onclick=e=>{
+ if(e.target.id==="mdl"){S.ask=false;render();return}
+ const r=e.target.closest("tr.t");
+ if(r&&!e.target.closest("button")){if(!e.target.closest(".ik")){ticks[r.dataset.k]=!ticks[r.dataset.k];saveProgress();render()}return}
+ const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+ if(b.id==="go-imp")doImport();
+ else if(b.id==="clr")clearData();
+ else if(b.id==="clrta")clearTamil();
+ else if(b.id==="resave")saveBills();
+ else if(b.id==="svback"){SV.open=null;render()}
+ else if(d.open){SV.open=d.open;render();window.scrollTo(0,0)}
+ else if(d.go)go(+d.go);
+ else if(d.t){S.pk=+d.t;render()}
+
+ else if(b.id==="ask"){S.ask=true;render()}
+ else if(b.id==="no"){S.ask=false;render()}
+ else if(b.id==="yes"){done[S.load]=new Date().toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"});saveProgress();S.ask=false;go(3)}
+ else if(d.pr){document.body.classList.add("pb");document.querySelectorAll(".bill").forEach((x,i)=>x.classList.toggle("pr",d.pr==="all"||+d.pr===i));window.print()}
+};
+$("view").onchange=e=>{const t=e.target;
+ if(t.id==="fl"&&t.files[0])importOrders(t.files[0]);
+ else if(t.id==="tfl"&&t.files[0])importTamil(t.files[0]);
+ else if(t.classList.contains("mp")){IMP.map[t.dataset.f]=t.value;render()}
+ else if(t.classList.contains("cm"))IMP.cm[decodeURIComponent(t.dataset.r)]=t.value;
+ else if(t.classList.contains("ik")){ticks[t.dataset.k]=t.checked;saveProgress();render()}
+};
+$("msg").textContent="Imports and ticks stay in this browser. Bills are saved to the cloud when you open Make bills, and are listed under Saved bills.";
+render();loadTamil();
 </script>
 </body></html>
